@@ -1,0 +1,376 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Scoped resets only — do NOT set background/border/padding/color on buttons,
+ * or those rules beat Tailwind utilities (higher specificity).
+ */
+.oll-agent-chat,
+.oll-agent-chat * {
+  box-sizing: border-box;
+}
+
+.oll-agent-chat {
+  font-family: var(--font-satoshi), Satoshi, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #12233b;
+  -webkit-font-smoothing: antialiased;
+}
+
+.oll-agent-chat p {
+  margin: 0;
+}
+
+.oll-agent-chat button {
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.oll-agent-chat input,
+.oll-agent-chat textarea,
+.oll-agent-chat select {
+  font: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+/*
+ * Tailwind preflight is off — without this, inputs keep browser inset borders
+ * and submit buttons get outset chrome (looks broken on /pilot forms).
+ */
+.oll-agent-chat .oll-form-field {
+  display: block;
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+  color: #111827;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.oll-agent-chat .oll-form-field:focus {
+  outline: none;
+  border-color: #5387cf;
+  box-shadow: 0 0 0 2px #d4e1f3;
+}
+
+.oll-agent-chat .oll-form-field::placeholder {
+  color: #9ca3af;
+}
+
+.oll-agent-chat .oll-form-submit {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 9999px;
+  background: #1e4b8e;
+  color: #fff;
+  padding: 0.625rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.oll-agent-chat .oll-form-submit:hover:not(:disabled) {
+  background: #183d73;
+}
+
+.oll-agent-chat .oll-form-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.oll-agent-chat .oll-form-card {
+  border: 1px solid #d4e1f3;
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.875rem;
+  box-shadow: 0 1px 2px rgba(12, 31, 61, 0.06);
+}
+
+.oll-agent-chat img,
+.oll-agent-chat svg {
+  max-width: none;
+  flex-shrink: 0;
+}
+
+.oll-agent-chat svg {
+  display: block;
+}
+
+/* Site globals force img/svg height:auto — lock common icon sizes */
+.oll-agent-chat .h-3 { width: 0.75rem !important; height: 0.75rem !important; }
+.oll-agent-chat .h-4 { width: 1rem !important; height: 1rem !important; }
+.oll-agent-chat .h-5 { width: 1.25rem !important; height: 1.25rem !important; }
+.oll-agent-chat .h-6 { width: 1.5rem !important; height: 1.5rem !important; }
+.oll-agent-chat .h-7 { width: 1.75rem !important; height: 1.75rem !important; }
+.oll-agent-chat .h-9 { width: 2.25rem !important; height: 2.25rem !important; }
+.oll-agent-chat .h-10 { width: 2.5rem !important; height: 2.5rem !important; }
+.oll-agent-chat .h-14 { height: 3.5rem !important; }
+.oll-agent-chat .w-3 { width: 0.75rem !important; }
+.oll-agent-chat .w-4 { width: 1rem !important; }
+.oll-agent-chat .w-5 { width: 1.25rem !important; }
+.oll-agent-chat .w-6 { width: 1.5rem !important; }
+.oll-agent-chat .w-7 { width: 1.75rem !important; }
+.oll-agent-chat .w-9 { width: 2.25rem !important; }
+.oll-agent-chat .w-10 { width: 2.5rem !important; }
+.oll-agent-chat .w-14 { width: 3.5rem !important; }
+
+/* Critical chrome — survives any utility/specificity fights with site CSS */
+.oll-agent-chat .oll-chat-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 20px;
+  border: 1px solid #d6e0f0;
+  background: #fff;
+  box-shadow: 0 25px 50px -12px rgba(12, 31, 61, 0.25);
+}
+
+/*
+ * Site .nav is sticky z-index:100 — chat must sit above it or the navy
+ * header (and expand/close) get covered and look “clipped”.
+ */
+.oll-agent-chat:not(.oll-agent-chat--pilot) {
+  z-index: 110 !important;
+  max-height: calc(100vh - 1rem) !important;
+  max-height: calc(100dvh - 1rem) !important;
+  overflow: visible;
+}
+
+.oll-agent-chat:not(.oll-agent-chat--pilot) .oll-chat-panel {
+  width: min(400px, calc(100vw - 2rem)) !important;
+  height: min(420px, calc(100vh - 7rem)) !important;
+  height: min(420px, calc(100dvh - 7rem)) !important;
+  max-height: calc(100vh - 7rem) !important;
+  max-height: calc(100dvh - 7rem) !important;
+}
+
+.oll-agent-chat:not(.oll-agent-chat--pilot) .oll-chat-panel.oll-chat-panel--expanded {
+  width: min(560px, calc(100vw - 2rem)) !important;
+  height: min(560px, calc(100vh - 7rem)) !important;
+  height: min(560px, calc(100dvh - 7rem)) !important;
+  max-height: calc(100vh - 7rem) !important;
+  max-height: calc(100dvh - 7rem) !important;
+}
+
+@media (max-width: 640px) {
+  .oll-agent-chat:not(.oll-agent-chat--pilot) {
+    right: 12px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .oll-agent-chat:not(.oll-agent-chat--pilot) .oll-chat-panel,
+  .oll-agent-chat:not(.oll-agent-chat--pilot) .oll-chat-panel.oll-chat-panel--expanded {
+    width: min(400px, calc(100vw - 1.5rem)) !important;
+    height: min(360px, calc(100vh - 7rem)) !important;
+    height: min(360px, calc(100dvh - 7rem)) !important;
+    max-height: calc(100vh - 7rem) !important;
+    max-height: calc(100dvh - 7rem) !important;
+  }
+}
+
+.oll-agent-chat .oll-chat-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #183d73;
+  color: #fff;
+}
+
+.oll-agent-chat .oll-chat-header button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem;
+  border-radius: 0.5rem;
+  color: rgba(255, 255, 255, 0.85);
+  background: transparent;
+  border: 0;
+}
+
+.oll-agent-chat .oll-chat-header button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.oll-agent-chat .oll-chat-body {
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow-y: auto;
+  background: #fff;
+  padding: 1rem;
+}
+
+.oll-agent-chat .oll-chat-body .break-words {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.oll-agent-chat .oll-chat-footer {
+  flex-shrink: 0;
+  border-top: 1px solid #eef2f7;
+  background: #fff;
+  padding: 0.75rem;
+}
+
+.oll-agent-chat .oll-chat-footer input {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  width: auto;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+/* Full-page pilot room: fill remaining viewport under the page header */
+.oll-pilot-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #eef3fb 0%, #ffffff 42%);
+  color: #12233b;
+  font-family: var(--font-satoshi), Satoshi, system-ui, sans-serif;
+}
+
+.oll-pilot-header {
+  flex-shrink: 0;
+  border-bottom: 1px solid #d6e0f0;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.oll-pilot-header-inner {
+  display: flex;
+  max-width: 64rem;
+  margin: 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .oll-pilot-header-inner {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+.oll-pilot-header .oll-logo {
+  height: 32px !important;
+  width: auto !important;
+  max-width: 160px;
+}
+
+.oll-pilot-eyebrow {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #183d73;
+  opacity: 0.85;
+}
+
+.oll-pilot-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  max-width: 64rem;
+  margin: 0 auto;
+  min-height: 0;
+  padding: 1.25rem 1rem 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .oll-pilot-main {
+    padding: 1.75rem 1.5rem 2rem;
+  }
+}
+
+.oll-agent-chat--pilot {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+}
+
+.oll-agent-chat--pilot .oll-chat-panel {
+  flex: 1 1 auto;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: min(560px, calc(100vh - 9rem)) !important;
+  min-height: min(560px, calc(100dvh - 9rem)) !important;
+  max-height: none !important;
+}
+
+.oll-agent-chat .oll-chat-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: #1e4b8e;
+  color: #fff;
+  border: 0;
+}
+
+.oll-agent-chat .oll-chat-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.oll-agent-chat .oll-chat-launcher {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 9999px;
+  background: #1e4b8e;
+  color: #fff;
+  border: 0;
+  box-shadow: 0 10px 15px -3px rgba(12, 31, 61, 0.3);
+}
+
+.oll-agent-chat .oll-chat-launcher:hover {
+  background: #183d73;
+}
+
+.oll-agent-chat .oll-chip {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 9999px;
+  border: 1px solid #a8c4e8;
+  background: #fff;
+  padding: 0.625rem 1rem;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1e4b8e;
+}
+
+.oll-agent-chat .oll-chip:hover {
+  border-color: #5387cf;
+  background: #eef3fa;
+}
+
+.oll-agent-chat :focus-visible {
+  outline: 2px solid #5387cf;
+  outline-offset: 2px;
+  border-radius: 8px;
+}

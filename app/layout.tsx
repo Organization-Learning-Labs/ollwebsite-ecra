@@ -2,10 +2,10 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Newsreader } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import Ollie from "@/components/Ollie";
+import "./oll-bot.css";
 import JsonLd from "@/components/JsonLd";
+import { SiteChrome } from "@/components/SiteChrome";
+import { OllieBotProvider } from "@/components/oll-bot/OllieBotContext";
 import { buildMetadata, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { siteConfig } from "@/lib/site";
 
@@ -52,14 +52,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${satoshi.variable} ${newsreader.variable}`}>
       <body>
-        <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
-        <a className="skip-link" href="#main">
-          Skip to content
-        </a>
-        <Header />
-        {children}
-        <Footer />
-        <Ollie />
+        <OllieBotProvider>
+          <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
+          <a className="skip-link" href="#main">
+            Skip to content
+          </a>
+          <SiteChrome>{children}</SiteChrome>
+        </OllieBotProvider>
       </body>
     </html>
   );

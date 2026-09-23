@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import HomePage from "@/components/home/HomePage";
 import JsonLd from "@/components/JsonLd";
+import { PilotOutreachRedirect } from "@/components/oll-bot/PilotOutreachRedirect";
 import { getHomeContent } from "@/lib/content";
 import { buildMetadata, webPageJsonLd } from "@/lib/seo";
 import { IND } from "@/data/home";
@@ -30,6 +32,9 @@ export default async function Page({ searchParams }: Props) {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <PilotOutreachRedirect />
+      </Suspense>
       <JsonLd
         data={webPageJsonLd("home", {
           path: content.industry === "it" ? "/" : `/?industry=${content.industry}`,
