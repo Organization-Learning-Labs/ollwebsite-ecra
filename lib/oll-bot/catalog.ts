@@ -34,12 +34,17 @@ export type LeadCaptureFormProps = {
 export type NominationFormProps = {
   title?: string;
   subtitle?: string;
+  submitLabel?: string;
   nominator_name?: string;
   nominator_email?: string;
   nominator_role?: string;
   organization_name?: string;
   campaign_id?: string;
   executive_id?: string;
+  nominee_name?: string;
+  nominee_email?: string;
+  nominee_job_title?: string;
+  nominee_dept?: string;
 };
 
 export type ThankYouCardProps = {

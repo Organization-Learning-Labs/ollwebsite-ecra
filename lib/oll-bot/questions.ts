@@ -44,6 +44,30 @@ export const ollBotQuestions = {
     },
   ] satisfies FlowStep[],
 
+  /** Pilot concierge — nomination form is shown on landing; no duplicate nominate chip. */
+  pilotStarters: [
+    {
+      label: 'Self assess',
+      message: 'Self assess',
+    },
+    {
+      label: 'What is OLL Academy?',
+      message: 'What is OLL Academy?',
+    },
+    {
+      label: 'How does future readiness work?',
+      message: 'How does future readiness work?',
+    },
+    {
+      label: 'What makes OLL different?',
+      message: 'What makes OLL Academy different from a standard content library?',
+    },
+    {
+      label: 'Connect with OLL',
+      message: 'I would like to connect with the OLL team.',
+    },
+  ] satisfies StarterQuestion[],
+
   starters: [
     {
       label: 'Nominate an employee for a diagnostic scan',

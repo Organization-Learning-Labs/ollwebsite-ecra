@@ -26,8 +26,15 @@ import {
 } from '@/lib/oll-bot/pilot-api';
 import { useOllieBotOptional } from '@/components/oll-bot/OllieBotContext';
 
-const NOMINATE_STARTER =
-  'Nominate an employee for a diagnostic scan';
+const NOMINATE_STARTER = 'Nominate an employee for a diagnostic scan';
+const SELF_ASSESS_STARTER = 'Self assess';
+
+function messageHasNominationForm(msg: ChatMessage): boolean {
+  return (
+    msg.role === 'assistant' &&
+    (msg.catalog?.some((node) => node.type === 'nomination_form') ?? false)
+  );
+}
 
 type ChatRole = 'user' | 'assistant' | 'system';
 
@@ -585,16 +592,23 @@ export function OllAgentChat({
           .filter((m) => m.role === 'user')
           .map((m) => m.text.trim().toLowerCase())
       );
-      const unused = ollBotQuestions.starters.filter((s) => {
+      const hasNominationForm = messages.some(messageHasNominationForm);
+      const starterPool = isPilotRoom
+        ? ollBotQuestions.pilotStarters
+        : ollBotQuestions.starters;
+      const unused = starterPool.filter((s) => {
         const label = s.label.trim().toLowerCase();
         const message = s.message.trim().toLowerCase();
+        if (hasNominationForm && message === NOMINATE_STARTER.toLowerCase()) {
+          return false;
+        }
         return !asked.has(label) && !asked.has(message);
       });
       // Show up to 3 fresh suggestions so the thread stays focused.
       return unused.slice(0, 3);
     }
     return [];
-  }, [flowDone, currentFlow, messages]);
+  }, [flowDone, currentFlow, isPilotRoom, messages]);
 
   const appendMessage = useCallback((msg: Omit<ChatMessage, 'id'> & { id?: string }) => {
     setMessages((prev) => [...prev, { id: msg.id || newId(), ...msg }]);
@@ -769,8 +783,10 @@ export function OllAgentChat({
       handleFlowReply(message);
       return;
     }
+    const normalized = message.trim().toLowerCase();
+
     // Surface nomination form immediately for the dedicated starter chip
-    if (message.trim().toLowerCase() === NOMINATE_STARTER.toLowerCase()) {
+    if (normalized === NOMINATE_STARTER.toLowerCase()) {
       appendMessage({ role: 'user', text: message.trim() });
       appendMessage({
         role: 'assistant',
@@ -788,6 +804,32 @@ export function OllAgentChat({
       });
       return;
     }
+
+    if (normalized === SELF_ASSESS_STARTER.toLowerCase()) {
+      const ctx = readPilotSessionContext();
+      appendMessage({ role: 'user', text: message.trim() });
+      appendMessage({
+        role: 'assistant',
+        text: 'Confirm your details below to start your diagnostic scan.',
+        catalog: [
+          {
+            type: 'nomination_form',
+            props: {
+              title: 'Self assess',
+              subtitle:
+                'We will match you to a diagnostic assessment and send you an invitation.',
+              submitLabel: 'Start my diagnostic scan',
+              nominee_name: ctx.nominator_name,
+              nominee_email: ctx.nominator_email,
+              nominee_job_title: ctx.nominator_role,
+              nominee_dept: ctx.organization_name,
+            },
+          },
+        ],
+      });
+      return;
+    }
+
     void sendToAgent(message);
   };
 
