@@ -334,35 +334,24 @@
   font-family: var(--font-satoshi), Satoshi, system-ui, sans-serif;
 }
 
-.oll-pilot-header {
-  flex-shrink: 0;
-  border-bottom: 1px solid #d6e0f0;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+.oll-pilot-nav .nav-inner {
+  width: 100%;
 }
 
-.oll-pilot-header-inner {
-  display: flex;
-  max-width: 64rem;
-  margin: 0 auto;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 1rem;
+.oll-pilot-nav .oll-logo {
+  display: block;
+  flex: 0 0 auto;
+  height: 48px;
+  width: 133px;
+  max-width: none;
+  filter: none !important;
 }
 
-@media (min-width: 640px) {
-  .oll-pilot-header-inner {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+@media (max-width: 640px) {
+  .oll-pilot-nav .oll-logo {
+    height: 34px;
+    width: 94px;
   }
-}
-
-.oll-pilot-header .oll-logo {
-  height: 32px !important;
-  width: auto !important;
-  max-width: 160px;
 }
 
 .oll-pilot-eyebrow {
