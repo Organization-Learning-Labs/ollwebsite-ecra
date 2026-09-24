@@ -107,11 +107,88 @@ async function waitChat(
   return normalizeReply(data);
 }
 
+type StreamProgressUpdate = {
+  text: string;
+  isReply?: boolean;
+};
+
+function toolProgressLabel(toolName: string): string {
+  switch (toolName) {
+    case 'list_assessments_for_sale':
+      return 'Searching the assessment catalog…';
+    case 'hybrid_search':
+      return 'Searching OLL knowledge…';
+    case 'list_documents':
+      return 'Looking up documents…';
+    case 'web_search':
+    case 'fetch_page':
+      return 'Searching approved sources…';
+    default:
+      return `Running ${toolName.replace(/_/g, ' ')}…`;
+  }
+}
+
+function extractStreamProgress(event: Record<string, unknown>): StreamProgressUpdate | null {
+  const name = String(event.event || '');
+
+  if (name === 'started') {
+    return { text: 'Connecting…' };
+  }
+
+  if (name === 'status') {
+    const status = String(event.status || '');
+    if (status === 'running') return { text: 'Thinking…' };
+    return null;
+  }
+
+  if (name !== 'progress') return null;
+
+  const harness = event.harness_progress;
+  if (!harness || typeof harness !== 'object') return null;
+
+  const progress = harness as Record<string, unknown>;
+  const lastAction = String(progress.last_action || '');
+  const message = String(progress.message || '').trim();
+
+  if (lastAction === 'finish' && message) {
+    return { text: message, isReply: true };
+  }
+
+  if (lastAction === 'tool') {
+    const trail = Array.isArray(progress.trail) ? progress.trail : [];
+    for (let i = trail.length - 1; i >= 0; i -= 1) {
+      const hop = trail[i];
+      if (!hop || typeof hop !== 'object') continue;
+      const item = hop as Record<string, unknown>;
+      const plan =
+        item.plan && typeof item.plan === 'object'
+          ? (item.plan as Record<string, unknown>)
+          : null;
+      const tool = String(item.tool || plan?.tool || '').trim();
+      if (tool) return { text: toolProgressLabel(tool) };
+    }
+    return { text: 'Working…' };
+  }
+
+  const lower = message.toLowerCase();
+  if (!message || message === 'tool') return null;
+  if (lower.includes('loading memory') || lower.includes('skills/mcp')) {
+    return { text: 'Loading context…' };
+  }
+  if (lower.includes('harness started')) return { text: 'Thinking…' };
+  if (lower.includes('executing harness') || lower.includes('in-process')) {
+    return { text: 'Starting up…' };
+  }
+
+  return { text: message };
+}
+
 async function streamChat(
   message: string,
   sessionId: string,
   history: AgentHistoryItem[],
-  signal: AbortSignal
+  signal: AbortSignal,
+  onProgress?: (update: StreamProgressUpdate) => void
 ): Promise<AgentChatReply> {
   const res = await fetch('/api/agents/chat/stream', {
     method: 'POST',
@@ -149,6 +226,11 @@ async function streamChat(
 
     const extraOffers = extractAssessmentOffers(event);
     if (extraOffers.length > 0) streamedOffers = extraOffers;
+
+    const progress = extractStreamProgress(event);
+    if (progress) {
+      onProgress?.(progress);
+    }
 
     const name = String(event.event || '');
     if (name === 'started' || name === 'status' || name === 'progress') {
@@ -257,14 +339,22 @@ function AssistantAvatar() {
   );
 }
 
-function TypingIndicator() {
+function StreamingBubble({
+  text,
+  isReply,
+}: {
+  text: string;
+  isReply?: boolean;
+}) {
   return (
     <div className="oll-msg-in flex items-end gap-2.5">
       <AssistantAvatar />
-      <div className="flex items-center gap-1.5 rounded-2xl bg-[#EEF2F7] px-4 py-3">
-        <span className="oll-typing-dot h-1.5 w-1.5 rounded-full bg-primary-500" />
-        <span className="oll-typing-dot oll-typing-dot-2 h-1.5 w-1.5 rounded-full bg-primary-400" />
-        <span className="oll-typing-dot oll-typing-dot-3 h-1.5 w-1.5 rounded-full bg-primary-300" />
+      <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-[#EEF2F7] px-4 py-3 text-[14px] leading-relaxed break-words text-[#1E293B]">
+        {isReply ? (
+          <BotMessageContent text={text} variant="assistant" />
+        ) : (
+          <p className="m-0 text-[13px] text-slate-600">{text}</p>
+        )}
       </div>
     </div>
   );
@@ -285,6 +375,8 @@ export function OllAgentChat({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [streamingText, setStreamingText] = useState('');
+  const [streamingIsReply, setStreamingIsReply] = useState(false);
   const [flowStep, setFlowStep] = useState(0);
   const [sessionId, setSessionId] = useState('');
   const [agentHistory, setAgentHistory] = useState<AgentHistoryItem[]>([]);
@@ -445,7 +537,7 @@ export function OllAgentChat({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, busy, panelMounted]);
+  }, [messages, busy, streamingText, panelMounted]);
 
   useEffect(() => {
     if (open && panelMounted && !panelClosing) {
@@ -545,6 +637,8 @@ export function OllAgentChat({
 
       const trimmed = text.trim();
       appendMessage({ role: 'user', text: trimmed });
+      setStreamingText('');
+      setStreamingIsReply(false);
       setBusy(true);
 
       const historyForRequest = agentHistory.slice();
@@ -554,7 +648,16 @@ export function OllAgentChat({
       try {
         let reply: AgentChatReply;
         try {
-          reply = await streamChat(trimmed, sessionId, historyForRequest, controller.signal);
+          reply = await streamChat(
+            trimmed,
+            sessionId,
+            historyForRequest,
+            controller.signal,
+            (update) => {
+              setStreamingText(update.text);
+              setStreamingIsReply(!!update.isReply);
+            }
+          );
         } catch {
           reply = await waitChat(trimmed, sessionId, historyForRequest);
         }
@@ -599,6 +702,8 @@ export function OllAgentChat({
         });
       } finally {
         abortRef.current = null;
+        setStreamingText('');
+        setStreamingIsReply(false);
         setBusy(false);
       }
     },
@@ -781,7 +886,7 @@ export function OllAgentChat({
         <div
           className={`oll-chat-panel ${panelSizeClass} ${panelClosing ? 'oll-panel-exit' : 'oll-panel-enter'}`}
           role="dialog"
-          aria-label={isPilotRoom ? 'OLL Diagnostic Pilot' : 'OLL Executive Advisor'}
+          aria-label={isPilotRoom ? 'The Organization Learning Labs Diagnostic Pilot' : 'The Organization Learning Labs Executive Advisor'}
           aria-modal={isPilotRoom ? undefined : true}
         >
           <header className="oll-chat-header">
@@ -794,7 +899,7 @@ export function OllAgentChat({
                 aria-hidden
               />
               <p className="text-[17px] font-bold leading-none tracking-tight text-white">
-                OLL<span className="text-secondary-400">.</span>
+                The Organization Learning Labs<span className="text-secondary-400">.</span>
                 {isPilotRoom ? (
                   <span className="ml-2 text-sm font-semibold text-white/90">
                     Diagnostic Pilot
@@ -906,7 +1011,12 @@ export function OllAgentChat({
                 </div>
               );
             })}
-            {busy && <TypingIndicator />}
+            {busy ? (
+              <StreamingBubble
+                text={streamingText || 'Connecting…'}
+                isReply={streamingIsReply}
+              />
+            ) : null}
           </div>
 
           <form onSubmit={handleSubmit} className="oll-chat-footer">
@@ -943,7 +1053,7 @@ export function OllAgentChat({
         <div className="flex items-center gap-2">
           {!hideLauncher && !open && !panelMounted && (
             <span className="pointer-events-none hidden select-none rounded-full border border-primary-100 bg-white/95 px-3 py-1.5 text-xs font-medium text-primary-700 shadow-sm backdrop-blur sm:inline-block">
-              Ask OLL
+              Ask The Organization Learning Labs
             </span>
           )}
           <button
@@ -952,7 +1062,7 @@ export function OllAgentChat({
             className={`oll-chat-launcher group ${
               open || panelMounted ? '' : 'oll-launcher-idle'
             }`}
-            aria-label={open || panelMounted ? 'Close OLL advisor' : 'Open OLL advisor'}
+            aria-label={open || panelMounted ? 'Close The Organization Learning Labs advisor' : 'Open The Organization Learning Labs advisor'}
             aria-expanded={open || panelMounted}
           >
             <span

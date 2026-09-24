@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useOllieBotOptional } from '@/components/oll-bot/OllieBotContext';
 
 const LINES = [
-  "Hi, I'm Ollie, your assessment readiness capability guide at OLL.",
+  "Hi, I'm Ollie, your assessment readiness capability guide at The Organization Learning Labs.",
   "Tell me your industry and I'll find the research for you.",
   "Not sure where your gaps are? Start with a 25-minute assessment.",
   "Want to see how a similar firm closed the same gap?",

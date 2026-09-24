@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         phone: body.phone?.trim() || 'Not provided',
         message:
           body.message?.trim() ||
-          `Consultation request via OLL Executive Advisor${
+          `Consultation request via The Organization Learning Labs Executive Advisor${
             body.organization ? ` (${body.organization})` : ''
           }`,
       }),

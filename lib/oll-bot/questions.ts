@@ -20,7 +20,7 @@ export type StarterQuestion = {
 
 export const ollBotQuestions = {
   welcome:
-    "Hi! I'm the OLL Executive Advisor. Let's explore how future readiness could support your organization.",
+    "Hi! I'm Ollie, the Executive Advisor at The Organization Learning Labs. Let's explore how future readiness could support your organization.",
 
   flow: [
     {

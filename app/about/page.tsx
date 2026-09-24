@@ -19,7 +19,7 @@ export default function AboutPage() {
       />
       <div className="phead">
         <div className="wrap">
-          <p className="label">About OLL</p>
+          <p className="label">About The Organization Learning Labs</p>
           <h1>Knowing change is coming is not the same as being ready for it.</h1>
           <p className="lede">
             The Organization Learning Labs helps enterprises work out what they will need to become capable of,

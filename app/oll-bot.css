@@ -374,3 +374,202 @@
   outline-offset: 2px;
   border-radius: 8px;
 }
+
+/* Assessment carousel — scoped styles beat site globals (h3, a underline, etc.) */
+.oll-agent-chat .oll-offer-carousel {
+  margin-left: 46px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.oll-agent-chat .oll-offer-carousel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-right: 0.25rem;
+}
+
+.oll-agent-chat .oll-offer-carousel-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1e4b8e;
+}
+
+.oll-agent-chat .oll-offer-carousel-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.oll-agent-chat .oll-offer-carousel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid #d6e0f0;
+  border-radius: 9999px;
+  background: #fff;
+  color: #1e4b8e;
+  padding: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.oll-agent-chat .oll-offer-carousel-btn:hover:not(:disabled) {
+  background: #eef3fa;
+  border-color: #a9c3e7;
+}
+
+.oll-agent-chat .oll-offer-carousel-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.oll-agent-chat .oll-offer-track {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scroll-snap-type: x mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.oll-agent-chat .oll-offer-track::-webkit-scrollbar {
+  display: none;
+}
+
+.oll-agent-chat .oll-offer-card {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 min(240px, calc(100% - 1.5rem));
+  scroll-snap-align: start;
+  min-height: 168px;
+  border: 1px solid #d4e1f3;
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.875rem;
+  box-shadow: 0 1px 2px rgba(12, 31, 61, 0.06);
+}
+
+.oll-agent-chat .oll-offer-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.oll-agent-chat .oll-offer-badge {
+  display: inline-flex;
+  border-radius: 9999px;
+  background: #ecfdf5;
+  padding: 0.125rem 0.5rem;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #15803d;
+  line-height: 1.4;
+}
+
+.oll-agent-chat .oll-offer-badge--default {
+  background: #eef3fa;
+  color: #183d73;
+}
+
+.oll-agent-chat .oll-offer-price {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #1e4b8e;
+  white-space: nowrap;
+}
+
+.oll-agent-chat .oll-offer-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #0c1f3d;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.oll-agent-chat .oll-offer-desc {
+  margin: 0.375rem 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #64748b;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.oll-agent-chat .oll-offer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+.oll-agent-chat .oll-offer-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  padding: 0.375rem 0.75rem;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.oll-agent-chat .oll-offer-action--primary {
+  border: 1px solid #1e4b8e;
+  background: #1e4b8e;
+  color: #fff;
+}
+
+.oll-agent-chat .oll-offer-action--primary:hover {
+  background: #183d73;
+  border-color: #183d73;
+  color: #fff;
+}
+
+.oll-agent-chat .oll-offer-action--secondary {
+  border: 1px solid #a9c3e7;
+  background: #fff;
+  color: #1e4b8e;
+}
+
+.oll-agent-chat .oll-offer-action--secondary:hover {
+  background: #eef3fa;
+  border-color: #5387cf;
+  color: #183d73;
+}
+
+.oll-agent-chat .oll-offer-action--ghost {
+  border: 1px solid #d6e0f0;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 500;
+}
+
+.oll-agent-chat .oll-offer-action--ghost:hover {
+  border-color: #a9c3e7;
+  background: #fff;
+  color: #1e4b8e;
+}
