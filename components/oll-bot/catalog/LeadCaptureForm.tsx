@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import type { LeadCaptureFormProps } from '@/lib/oll-bot/catalog';
 
 export function LeadCaptureForm({
@@ -16,8 +16,7 @@ export function LeadCaptureForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!consent) {
       setError('Please agree to be contacted.');
       return;
@@ -49,10 +48,7 @@ export function LeadCaptureForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="oll-form-card space-y-2.5"
-    >
+    <div className="oll-form-card space-y-2.5">
       <div>
         <p className="text-sm font-semibold text-primary-800">{title}</p>
         <p className="mt-1 text-[12px] text-gray-500">{subtitle}</p>
@@ -98,12 +94,13 @@ export function LeadCaptureForm({
       </label>
       {error ? <p className="text-[11px] text-coral-600">{error}</p> : null}
       <button
-        type="submit"
+        type="button"
         disabled={busy}
+        onClick={() => void handleSubmit()}
         className="oll-form-submit"
       >
         {busy ? 'Sending…' : 'Submit'}
       </button>
-    </form>
+    </div>
   );
 }
