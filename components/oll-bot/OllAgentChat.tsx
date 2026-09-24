@@ -446,7 +446,15 @@ export function OllAgentChat({
         }
 
         if (cancelled) return;
-        setPilotContext(readPilotSessionContext());
+        const stored = readPilotSessionContext();
+        setPilotContext({
+          ...stored,
+          nominator_name: track.executive_name || stored.nominator_name,
+          nominator_email: track.executive_email || stored.nominator_email,
+          nominator_role: track.executive_job_title || stored.nominator_role,
+          organization_name: track.company || stored.organization_name,
+          industry: track.industry || stored.industry,
+        });
 
         void fetch('/api/agents/conversations', {
           method: 'POST',
@@ -806,23 +814,31 @@ export function OllAgentChat({
     }
 
     if (normalized === SELF_ASSESS_STARTER.toLowerCase()) {
-      const ctx = readPilotSessionContext();
+      const ctx = { ...readPilotSessionContext(), ...pilotContext };
+      const knownName = ctx.nominator_name?.trim() || '';
+      const knownEmail = ctx.nominator_email?.trim() || '';
+      const fromEmail = Boolean(ctx.campaign_id && ctx.executive_id && (knownName || knownEmail));
       appendMessage({ role: 'user', text: message.trim() });
       appendMessage({
         role: 'assistant',
-        text: 'Confirm your details below to start your diagnostic scan.',
+        text: fromEmail
+          ? 'These are the details from your invitation. Confirm them to start your diagnostic scan.'
+          : 'Confirm your details below to start your diagnostic scan.',
         catalog: [
           {
             type: 'nomination_form',
             props: {
               title: 'Self assess',
-              subtitle:
-                'We will match you to a diagnostic assessment and send you an invitation.',
+              subtitle: fromEmail
+                ? 'We prefilled this from your invitation email. Choose your industry and job role if they are missing.'
+                : 'We will match you to a diagnostic assessment and send you an invitation.',
               submitLabel: 'Start my diagnostic scan',
-              nominee_name: ctx.nominator_name,
-              nominee_email: ctx.nominator_email,
+              nominee_name: knownName || undefined,
+              nominee_email: knownEmail || undefined,
               nominee_job_title: ctx.nominator_role,
               nominee_dept: ctx.organization_name,
+              nominee_industry: ctx.industry,
+              lockIdentity: fromEmail && Boolean(knownName && knownEmail),
             },
           },
         ],

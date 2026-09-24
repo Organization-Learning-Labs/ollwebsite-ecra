@@ -1,7 +1,6 @@
 /**
  * Server-side content loaders.
- * Today these read local data modules; later they can fetch REST APIs
- * (e.g. process.env.OLL_API_BASE_URL) without changing page components.
+ * Marketplace card sections load from GET /content/marketplace with local fallback.
  */
 
 import {
@@ -15,44 +14,105 @@ import {
   RESEARCH,
   TARGET,
   VISIBLE_COMPS,
+  type CardItem,
+  type CaseStudy,
   type IndustryKey,
 } from "@/data/home";
+import { fetchHomeMarketplaceSection } from "@/lib/marketplace";
+
+export type ContentSource = "live" | "fallback";
 
 export type HomeContent = {
   industry: IndustryKey;
   artBase: typeof ART_BASE;
   industries: typeof IND;
-  practices: typeof PRACTICES;
-  research: typeof RESEARCH;
-  cases: typeof CASES;
+  practices: Record<IndustryKey, CardItem[]>;
+  research: Record<IndustryKey | "all", CardItem[]>;
+  cases: Record<IndustryKey, CaseStudy[]>;
   comps: typeof COMPS;
   band: typeof BAND;
   target: typeof TARGET;
   visibleComps: typeof VISIBLE_COMPS;
   heroImages: typeof HERO_IMAGES;
+  contentSource: {
+    research: Record<IndustryKey, ContentSource>;
+    practices: Record<IndustryKey, ContentSource>;
+    cases: Record<IndustryKey, ContentSource>;
+  };
 };
+
+const INDUSTRY_KEYS: IndustryKey[] = ["it", "bfsi"];
 
 function normalizeIndustry(value?: string | string[]): IndustryKey {
   const v = Array.isArray(value) ? value[0] : value;
   return v === "bfsi" ? "bfsi" : "it";
 }
 
-/** Load homepage marketing content for SSR. Swap internals for REST when ready. */
+async function loadMarketplaceForIndustry(industry: IndustryKey) {
+  const [researchRes, practicesRes, casesRes] = await Promise.all([
+    fetchHomeMarketplaceSection(industry, "research_synopsis", 3),
+    fetchHomeMarketplaceSection(industry, "best_practice", 3),
+    fetchHomeMarketplaceSection(industry, "case_study", 3),
+  ]);
+
+  return {
+    research: researchRes.live
+      ? (researchRes.items as CardItem[])
+      : (RESEARCH[industry] ?? RESEARCH.all).slice(0, 3),
+    researchSource: researchRes.live ? ("live" as const) : ("fallback" as const),
+    practices: practicesRes.live
+      ? (practicesRes.items as CardItem[])
+      : (PRACTICES[industry] ?? PRACTICES.it).slice(0, 3),
+    practicesSource: practicesRes.live ? ("live" as const) : ("fallback" as const),
+    cases: casesRes.live
+      ? (casesRes.items as CaseStudy[])
+      : CASES[industry],
+    casesSource: casesRes.live ? ("live" as const) : ("fallback" as const),
+  };
+}
+
+/** Load homepage marketing content for SSR. */
 export async function getHomeContent(industryParam?: string | string[]): Promise<HomeContent> {
-  // Future: const res = await fetch(`${process.env.OLL_API_BASE_URL}/home?industry=...`, { next: { revalidate: 60 } })
   const industry = normalizeIndustry(industryParam);
+
+  const loaded = await Promise.all(
+    INDUSTRY_KEYS.map(async (key) => ({
+      key,
+      ...(await loadMarketplaceForIndustry(key)),
+    }))
+  );
+
+  const research: Record<IndustryKey, CardItem[]> = { it: [], bfsi: [] };
+  const practices: Record<IndustryKey, CardItem[]> = { it: [], bfsi: [] };
+  const cases: Record<IndustryKey, CaseStudy[]> = { it: [], bfsi: [] };
+  const contentSource = {
+    research: { it: "fallback" as ContentSource, bfsi: "fallback" as ContentSource },
+    practices: { it: "fallback" as ContentSource, bfsi: "fallback" as ContentSource },
+    cases: { it: "fallback" as ContentSource, bfsi: "fallback" as ContentSource },
+  };
+
+  for (const row of loaded) {
+    research[row.key] = row.research;
+    practices[row.key] = row.practices;
+    cases[row.key] = row.cases;
+    contentSource.research[row.key] = row.researchSource;
+    contentSource.practices[row.key] = row.practicesSource;
+    contentSource.cases[row.key] = row.casesSource;
+  }
+
   return {
     industry,
     artBase: ART_BASE,
     industries: IND,
-    practices: PRACTICES,
-    research: RESEARCH,
-    cases: CASES,
+    practices,
+    research: { ...research, all: research.it.length ? research.it : RESEARCH.all },
+    cases,
     comps: COMPS,
     band: BAND,
     target: TARGET,
     visibleComps: VISIBLE_COMPS,
     heroImages: HERO_IMAGES,
+    contentSource,
   };
 }
 

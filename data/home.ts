@@ -313,10 +313,12 @@ export type CaseStudy = {
   tag: string;
   t: string;
   d: string;
-  m1: string;
-  l1: string;
-  m2: string;
-  l2: string;
+  u?: string;
+  img?: string;
+  m1?: string;
+  l1?: string;
+  m2?: string;
+  l2?: string;
 };
 
 function makeCases(): CaseStudy[] {
