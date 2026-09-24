@@ -12,10 +12,10 @@ export const metadata: Metadata = {
 export default function PilotPage() {
   return (
     <div className="oll-pilot-page">
-      <header className="oll-pilot-header">
-        <div className="oll-pilot-header-inner">
-          <Link href="/" className="flex items-center" aria-label="OLL home">
-            <Logo className="oll-logo" />
+      <header className="nav oll-pilot-nav">
+        <div className="wrap nav-inner">
+          <Link className="brand" href="/" aria-label="The Organization Learning Labs home">
+            <Logo />
           </Link>
           <p className="oll-pilot-eyebrow">Diagnostic Pilot</p>
         </div>

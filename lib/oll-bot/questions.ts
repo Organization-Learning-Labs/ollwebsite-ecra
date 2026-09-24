@@ -44,7 +44,7 @@ export const ollBotQuestions = {
     },
   ] satisfies FlowStep[],
 
-  /** Pilot concierge — nomination form is shown on landing; no duplicate nominate chip. */
+  /** Pilot concierge — landing shows nominate form; Self assess chip switches to self-assess flow. */
   pilotStarters: [
     {
       label: 'Self assess',

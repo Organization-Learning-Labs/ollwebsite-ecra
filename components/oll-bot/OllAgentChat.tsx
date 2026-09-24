@@ -54,6 +54,11 @@ function stripNominationForms(messages: ChatMessage[]): ChatMessage[] {
     .filter((msg): msg is ChatMessage => msg !== null);
 }
 
+/** Drop assistant bubbles that only hosted a nomination/self-assess form. */
+function dropNominationFormMessages(messages: ChatMessage[]): ChatMessage[] {
+  return messages.filter((msg) => !messageHasNominationForm(msg));
+}
+
 function catalogWithoutStaleNominationForms(
   catalog: CatalogNode[] | undefined,
   messageId: string,
@@ -637,11 +642,8 @@ export function OllAgentChat({
       const unused = starterPool.filter((s) => {
         const label = s.label.trim().toLowerCase();
         const message = s.message.trim().toLowerCase();
-        if (
-          hasNominationForm &&
-          (message === NOMINATE_STARTER.toLowerCase() ||
-            message === SELF_ASSESS_STARTER.toLowerCase())
-        ) {
+        // Keep Self assess visible on pilot so executives can switch off the landing nominate form.
+        if (hasNominationForm && message === NOMINATE_STARTER.toLowerCase()) {
           return false;
         }
         return !asked.has(label) && !asked.has(message);
@@ -659,7 +661,7 @@ export function OllAgentChat({
   const appendNominationForm = useCallback(
     (userText: string, assistant: Omit<ChatMessage, 'id' | 'role'>) => {
       setMessages((prev) => [
-        ...stripNominationForms(prev),
+        ...dropNominationFormMessages(prev),
         { id: newId(), role: 'user', text: userText },
         { id: newId(), role: 'assistant', ...assistant },
       ]);
@@ -999,25 +1001,20 @@ export function OllAgentChat({
           aria-label={isPilotRoom ? 'The Organization Learning Labs Diagnostic Pilot' : 'The Organization Learning Labs Executive Advisor'}
           aria-modal={isPilotRoom ? undefined : true}
         >
-          <header className="oll-chat-header">
-            <div className="flex min-w-0 items-center gap-2.5">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/academy-white.svg"
-                alt=""
-                className="h-7 w-7 object-contain"
-                aria-hidden
-              />
-              <p className="text-[17px] font-bold leading-none tracking-tight text-white">
-                The Organization Learning Labs<span className="text-secondary-400">.</span>
-                {isPilotRoom ? (
-                  <span className="ml-2 text-sm font-semibold text-white/90">
-                    Diagnostic Pilot
-                  </span>
-                ) : null}
-              </p>
-            </div>
-            {!isPilotRoom ? (
+          {!isPilotRoom ? (
+            <header className="oll-chat-header">
+              <div className="flex min-w-0 items-center gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/academy-white.svg"
+                  alt=""
+                  className="h-7 w-7 object-contain"
+                  aria-hidden
+                />
+                <p className="text-[17px] font-bold leading-none tracking-tight text-white">
+                  The Organization Learning Labs<span className="text-secondary-400">.</span>
+                </p>
+              </div>
               <div className="flex shrink-0 items-center gap-0.5">
                 <button
                   type="button"
@@ -1034,8 +1031,8 @@ export function OllAgentChat({
                   <X className="h-5 w-5" />
                 </button>
               </div>
-            ) : null}
-          </header>
+            </header>
+          ) : null}
 
           <div
             ref={scrollRef}
