@@ -100,7 +100,18 @@ export function AutocompleteField({
           }
         }}
         onBlur={() => {
-          window.setTimeout(() => setOpen(false), 120);
+          window.setTimeout(() => {
+            setOpen(false);
+            if (value || !query.trim() || options.length === 0) return;
+            const q = query.trim().toLowerCase();
+            const exact = options.find((option) => option.label.toLowerCase() === q);
+            const startsWith = options.find((option) =>
+              option.label.toLowerCase().startsWith(q)
+            );
+            const onlyMatch = matches.length === 1 ? matches[0] : null;
+            const best = exact || onlyMatch || startsWith;
+            if (best) pick(best);
+          }, 120);
         }}
       />
       {showList ? (

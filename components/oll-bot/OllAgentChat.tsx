@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Send, X, Bot, Maximize2, Minimize2 } from 'lucide-react';
 import { ollBotQuestions } from '@/lib/oll-bot/questions';
@@ -33,6 +33,36 @@ function messageHasNominationForm(msg: ChatMessage): boolean {
   return (
     msg.role === 'assistant' &&
     (msg.catalog?.some((node) => node.type === 'nomination_form') ?? false)
+  );
+}
+
+function stripNominationForms(messages: ChatMessage[]): ChatMessage[] {
+  return messages
+    .map((msg) => {
+      if (!msg.catalog?.some((node) => node.type === 'nomination_form')) {
+        return msg;
+      }
+      const catalog = msg.catalog.filter((node) => node.type !== 'nomination_form');
+      if (catalog.length === 0 && !msg.text.trim()) {
+        return null;
+      }
+      return {
+        ...msg,
+        catalog: catalog.length > 0 ? catalog : undefined,
+      };
+    })
+    .filter((msg): msg is ChatMessage => msg !== null);
+}
+
+function catalogWithoutStaleNominationForms(
+  catalog: CatalogNode[] | undefined,
+  messageId: string,
+  activeNominationFormMessageId: string | null
+): CatalogNode[] {
+  if (!catalog?.length) return [];
+  return catalog.filter(
+    (node) =>
+      node.type !== 'nomination_form' || messageId === activeNominationFormMessageId
   );
 }
 
@@ -607,7 +637,11 @@ export function OllAgentChat({
       const unused = starterPool.filter((s) => {
         const label = s.label.trim().toLowerCase();
         const message = s.message.trim().toLowerCase();
-        if (hasNominationForm && message === NOMINATE_STARTER.toLowerCase()) {
+        if (
+          hasNominationForm &&
+          (message === NOMINATE_STARTER.toLowerCase() ||
+            message === SELF_ASSESS_STARTER.toLowerCase())
+        ) {
           return false;
         }
         return !asked.has(label) && !asked.has(message);
@@ -621,6 +655,24 @@ export function OllAgentChat({
   const appendMessage = useCallback((msg: Omit<ChatMessage, 'id'> & { id?: string }) => {
     setMessages((prev) => [...prev, { id: msg.id || newId(), ...msg }]);
   }, []);
+
+  const appendNominationForm = useCallback(
+    (userText: string, assistant: Omit<ChatMessage, 'id' | 'role'>) => {
+      setMessages((prev) => [
+        ...stripNominationForms(prev),
+        { id: newId(), role: 'user', text: userText },
+        { id: newId(), role: 'assistant', ...assistant },
+      ]);
+    },
+    []
+  );
+
+  const activeNominationFormMessageId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messageHasNominationForm(messages[i])) return messages[i].id;
+    }
+    return null;
+  }, [messages]);
 
   const openPanel = () => {
     if (closeTimerRef.current) {
@@ -698,16 +750,21 @@ export function OllAgentChat({
         const offers = reply.assessment_offers || [];
         const visibleText = cleanupOfferReply(parsedText || answer, offers);
 
-        appendMessage({
-          role: 'assistant',
-          text: visibleText || (offers.length > 0 ? '' : answer),
-          // Agent host often flags tool/search failures as "refused" even when we
-          // still show a normal answer — never paint successful bubbles red.
-          refused: false,
-          status: reply.status,
-          catalog: nodes.length > 0 ? nodes : undefined,
-          offers: offers.length > 0 ? offers : undefined,
-        });
+        const hasNewNominationForm = nodes.some((node) => node.type === 'nomination_form');
+        setMessages((prev) => [
+          ...(hasNewNominationForm ? stripNominationForms(prev) : prev),
+          {
+            id: newId(),
+            role: 'assistant',
+            text: visibleText || (offers.length > 0 ? '' : answer),
+            // Agent host often flags tool/search failures as "refused" even when we
+            // still show a normal answer — never paint successful bubbles red.
+            refused: false,
+            status: reply.status,
+            catalog: nodes.length > 0 ? nodes : undefined,
+            offers: offers.length > 0 ? offers : undefined,
+          },
+        ]);
 
         setAgentHistory((prev) =>
           [
@@ -773,10 +830,9 @@ export function OllAgentChat({
     [appendMessage, busy, flowDone, flowStep]
   );
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const submitChatInput = () => {
     const value = input.trim();
-    if (!value) return;
+    if (!value || busy) return;
     setInput('');
     if (!flowDone) {
       handleFlowReply(value);
@@ -795,9 +851,7 @@ export function OllAgentChat({
 
     // Surface nomination form immediately for the dedicated starter chip
     if (normalized === NOMINATE_STARTER.toLowerCase()) {
-      appendMessage({ role: 'user', text: message.trim() });
-      appendMessage({
-        role: 'assistant',
+      appendNominationForm(message.trim(), {
         text: 'Share the employee details below to nominate them for a diagnostic scan.',
         catalog: [
           {
@@ -818,11 +872,9 @@ export function OllAgentChat({
       const knownName = ctx.nominator_name?.trim() || '';
       const knownEmail = ctx.nominator_email?.trim() || '';
       const fromEmail = Boolean(ctx.campaign_id && ctx.executive_id && (knownName || knownEmail));
-      appendMessage({ role: 'user', text: message.trim() });
-      appendMessage({
-        role: 'assistant',
+      appendNominationForm(message.trim(), {
         text: fromEmail
-          ? 'These are the details from your invitation. Confirm them to start your diagnostic scan.'
+          ? 'These are the details from your invitation. Confirm them and adjust your industry or job role if needed.'
           : 'Confirm your details below to start your diagnostic scan.',
         catalog: [
           {
@@ -830,7 +882,7 @@ export function OllAgentChat({
             props: {
               title: 'Self assess',
               subtitle: fromEmail
-                ? 'We prefilled this from your invitation email. Choose your industry and job role if they are missing.'
+                ? 'We suggested your details from your invitation email. You can change your industry and job role before starting.'
                 : 'We will match you to a diagnostic assessment and send you an invitation.',
               submitLabel: 'Start my diagnostic scan',
               nominee_name: knownName || undefined,
@@ -1060,12 +1112,20 @@ export function OllAgentChat({
                     <AssessmentCarousel offers={msg.offers} />
                   ) : null}
 
-                  {!isUser && msg.catalog && msg.catalog.length > 0 ? (
-                    <CatalogRenderer
-                      nodes={msg.catalog}
-                      pilotContext={pilotContext}
-                    />
-                  ) : null}
+                  {!isUser && msg.catalog && msg.catalog.length > 0 ? (() => {
+                    const nodes = catalogWithoutStaleNominationForms(
+                      msg.catalog,
+                      msg.id,
+                      activeNominationFormMessageId
+                    );
+                    if (nodes.length === 0) return null;
+                    return (
+                      <CatalogRenderer
+                        nodes={nodes}
+                        pilotContext={pilotContext}
+                      />
+                    );
+                  })() : null}
                 </div>
               );
             })}
@@ -1077,13 +1137,19 @@ export function OllAgentChat({
             ) : null}
           </div>
 
-          <form onSubmit={handleSubmit} className="oll-chat-footer">
+          <div className="oll-chat-footer" role="search">
             <div className="flex items-center gap-2 rounded-full border border-[#D6E0F0] bg-white py-1.5 pl-4 pr-1.5 shadow-sm">
               <input
                 ref={inputRef}
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    submitChatInput();
+                  }
+                }}
                 disabled={busy}
                 placeholder="Type your message..."
                 className="min-w-0 flex-1 border-0 bg-transparent py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 disabled:opacity-60"
@@ -1091,7 +1157,8 @@ export function OllAgentChat({
                 aria-label="Chat message"
               />
               <button
-                type="submit"
+                type="button"
+                onClick={submitChatInput}
                 disabled={busy || !input.trim()}
                 className="oll-chat-send"
                 aria-label="Send"
@@ -1099,7 +1166,7 @@ export function OllAgentChat({
                 <Send className="h-4 w-4" />
               </button>
             </div>
-          </form>
+          </div>
         </div>
       )}
 

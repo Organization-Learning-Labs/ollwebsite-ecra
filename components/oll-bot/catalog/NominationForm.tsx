@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { NominationFormProps } from '@/lib/oll-bot/catalog';
 import {
   readPilotSessionContext,
@@ -76,23 +76,35 @@ export function NominationForm({
     [pilotContext]
   );
 
-  const knownName =
-    nominee_name?.trim() || session.nominator_name?.trim() || '';
-  const knownEmail =
-    nominee_email?.trim() || session.nominator_email?.trim() || '';
-  const knownJob =
-    nominee_job_title?.trim() || session.nominator_role?.trim() || '';
-  const knownCompany =
-    nominee_dept?.trim() || session.organization_name?.trim() || '';
-  const knownIndustry =
-    nominee_industry?.trim() || session.industry?.trim() || '';
   const isSelfAssess = title === 'Self assess' || Boolean(lockIdentity);
+
+  // Nominate: never prefill from the nominator's session — the employee is someone else.
+  // Self assess: treat invitation/session fields as suggestions the user can override.
+  const knownName = isSelfAssess
+    ? nominee_name?.trim() || session.nominator_name?.trim() || ''
+    : nominee_name?.trim() || '';
+  const knownEmail = isSelfAssess
+    ? nominee_email?.trim() || session.nominator_email?.trim() || ''
+    : nominee_email?.trim() || '';
+  const knownJob = isSelfAssess
+    ? nominee_job_title?.trim() || session.nominator_role?.trim() || ''
+    : nominee_job_title?.trim() || '';
+  const knownCompany = isSelfAssess
+    ? nominee_dept?.trim() || session.organization_name?.trim() || ''
+    : nominee_dept?.trim() || '';
+  const knownIndustry = isSelfAssess
+    ? nominee_industry?.trim() || session.industry?.trim() || ''
+    : nominee_industry?.trim() || '';
   const fromInvite = Boolean(
-    isSelfAssess && knownName && isValidEmail(knownEmail)
+    lockIdentity && isSelfAssess && knownName && isValidEmail(knownEmail)
   );
 
-  const [nomineeName, setNomineeName] = useState(knownName);
-  const [nomineeEmail, setNomineeEmail] = useState(knownEmail);
+  const [nomineeName, setNomineeName] = useState(() =>
+    isSelfAssess ? knownName : nominee_name?.trim() || ''
+  );
+  const [nomineeEmail, setNomineeEmail] = useState(() =>
+    isSelfAssess ? knownEmail : nominee_email?.trim() || ''
+  );
   const [industry, setIndustry] = useState<AutocompleteOption | null>(null);
   const [jobRole, setJobRole] = useState<AutocompleteOption | null>(null);
   const [industries, setIndustries] = useState<AutocompleteOption[]>([]);
@@ -102,7 +114,10 @@ export function NominationForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const identityReady = nomineeName.trim().length > 1 && isValidEmail(nomineeEmail);
+  const effectiveName = nomineeName.trim() || (fromInvite ? knownName : '');
+  const effectiveEmail = nomineeEmail.trim() || (fromInvite ? knownEmail : '');
+  const identityReady =
+    effectiveName.length > 1 && isValidEmail(effectiveEmail);
 
   useEffect(() => {
     if (!identityReady) return;
@@ -173,26 +188,40 @@ export function NominationForm({
   }, [industry]);
 
   useEffect(() => {
+    if (!isSelfAssess) return;
     if (!nomineeName && knownName) setNomineeName(knownName);
     if (!nomineeEmail && knownEmail) setNomineeEmail(knownEmail);
-  }, [knownName, knownEmail, nomineeName, nomineeEmail]);
+  }, [isSelfAssess, knownName, knownEmail, nomineeName, nomineeEmail]);
 
   useEffect(() => {
-    if (industry || industries.length === 0) return;
+    if (!fromInvite) return;
+    if (knownName) setNomineeName(knownName);
+    if (knownEmail) setNomineeEmail(knownEmail);
+  }, [fromInvite, knownName, knownEmail]);
+
+  useEffect(() => {
+    if (!isSelfAssess || industry || industries.length === 0 || !knownIndustry) return;
     const match = findClosestOption(industries, knownIndustry);
     if (match) setIndustry(match);
-  }, [industries, knownIndustry, industry]);
+  }, [isSelfAssess, industries, knownIndustry, industry]);
 
   useEffect(() => {
-    if (jobRole || roles.length === 0) return;
+    if (!isSelfAssess || jobRole || roles.length === 0 || !knownJob) return;
     const match = findClosestOption(roles, knownJob);
     if (match) setJobRole(match);
-  }, [roles, knownJob, jobRole]);
+  }, [isSelfAssess, roles, knownJob, jobRole]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!industry || !jobRole) {
-      setError('Select an industry and job role to continue.');
+  const handleSubmit = async () => {
+    if (!identityReady) {
+      setError('Enter a valid name and work email to continue.');
+      return;
+    }
+    if (!industry) {
+      setError('Select an industry from the list to continue.');
+      return;
+    }
+    if (!jobRole) {
+      setError('Select a job role from the list to continue.');
       return;
     }
     setBusy(true);
@@ -208,8 +237,8 @@ export function NominationForm({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nominee_name: nomineeName.trim(),
-          nominee_email: nomineeEmail.trim(),
+          nominee_name: effectiveName,
+          nominee_email: effectiveEmail,
           nominee_job_title: jobRole.label,
           nominee_dept: orgName,
           industry: industry.label,
@@ -254,37 +283,29 @@ export function NominationForm({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="oll-form-card space-y-2.5"
-    >
+    <div className="oll-form-card space-y-2.5">
       <div>
         <p className="text-sm font-semibold text-primary-800">{title}</p>
         <p className="mt-1 text-[12px] text-gray-500">{subtitle}</p>
       </div>
-      {isSelfAssess && (knownName || knownEmail) ? (
+      {fromInvite ? (
         <div className="oll-known-person">
-          <p className="oll-known-person-kicker">
-            {fromInvite ? 'From your invitation' : 'Your details'}
-          </p>
-          <p className="oll-known-person-name">{nomineeName || knownName || 'Your name'}</p>
-          {nomineeEmail || knownEmail ? (
-            <p className="oll-known-person-email">{nomineeEmail || knownEmail}</p>
-          ) : null}
-          {knownJob || knownIndustry || knownCompany ? (
-            <p className="oll-known-person-meta">
-              {[knownJob, knownIndustry, knownCompany].filter(Boolean).join(' · ')}
-            </p>
+          <p className="oll-known-person-kicker">From your invitation</p>
+          <p className="oll-known-person-name">{nomineeName || knownName}</p>
+          <p className="oll-known-person-email">{nomineeEmail || knownEmail}</p>
+          {knownCompany ? (
+            <p className="oll-known-person-meta">{knownCompany}</p>
           ) : null}
         </div>
-      ) : null}
-      {fromInvite ? null : (
+      ) : (
         <>
           <input
             required
             value={nomineeName}
             onChange={(e) => setNomineeName(e.target.value)}
-            placeholder="Nominee full name"
+            placeholder={
+              isSelfAssess && knownName ? `Your name (suggested: ${knownName})` : 'Nominee full name'
+            }
             className="oll-form-field"
           />
           <input
@@ -292,26 +313,45 @@ export function NominationForm({
             type="email"
             value={nomineeEmail}
             onChange={(e) => setNomineeEmail(e.target.value)}
-            placeholder="Nominee work email"
+            placeholder={
+              isSelfAssess && knownEmail
+                ? `Your work email (suggested: ${knownEmail})`
+                : 'Nominee work email'
+            }
             className="oll-form-field"
           />
         </>
       )}
       {identityReady ? (
-        <AutocompleteField
-          value={industry}
-          options={industries}
-          placeholder="Industry"
-          loading={industriesLoading}
-          emptyText="No matching industry"
-          onSelect={setIndustry}
-        />
+        <>
+          {isSelfAssess && (knownIndustry || knownJob) ? (
+            <p className="text-[11px] text-gray-500">
+              Suggested from your invitation — change industry or job role below if needed.
+            </p>
+          ) : null}
+          <AutocompleteField
+            value={industry}
+            options={industries}
+            placeholder={
+              isSelfAssess && knownIndustry && !industry
+                ? `Industry (suggested: ${knownIndustry})`
+                : 'Industry'
+            }
+            loading={industriesLoading}
+            emptyText="No matching industry"
+            onSelect={setIndustry}
+          />
+        </>
       ) : null}
       {identityReady && industry ? (
         <AutocompleteField
           value={jobRole}
           options={roles}
-          placeholder="Job role"
+          placeholder={
+            isSelfAssess && knownJob && !jobRole
+              ? `Job role (suggested: ${knownJob})`
+              : 'Job role'
+          }
           loading={rolesLoading}
           emptyText="No matching job role"
           onSelect={setJobRole}
@@ -319,12 +359,13 @@ export function NominationForm({
       ) : null}
       {error ? <p className="text-[11px] text-coral-600">{error}</p> : null}
       <button
-        type="submit"
-        disabled={busy || !identityReady || !industry || !jobRole}
+        type="button"
+        disabled={busy}
+        onClick={() => void handleSubmit()}
         className="oll-form-submit"
       >
         {busy ? 'Submitting…' : submitLabel}
       </button>
-    </form>
+    </div>
   );
 }
