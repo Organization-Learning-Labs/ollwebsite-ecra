@@ -45,6 +45,8 @@ export type NominationFormProps = {
   nominee_email?: string;
   nominee_job_title?: string;
   nominee_dept?: string;
+  nominee_industry?: string;
+  lockIdentity?: boolean;
 };
 
 export type ThankYouCardProps = {

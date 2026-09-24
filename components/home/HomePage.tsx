@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import type { HomeContent } from "@/lib/content";
-import type { CardItem, CompBand, IndustryKey } from "@/data/home";
+import type { CardItem, CaseStudy, CompBand, IndustryKey } from "@/data/home";
+import { marketplaceViewAllUrl } from "@/lib/marketplace";
 
 type PathKey = "org" | "dept" | "ind";
 
@@ -91,6 +92,7 @@ export default function HomePage({
     visibleComps: VISIBLE_COMPS,
     heroImages: HERO_IMAGES,
     artBase: ART_BASE,
+    contentSource,
   } = content;
 
   const [industry, setIndustryState] = useState<IndustryKey>(initialIndustry);
@@ -113,7 +115,13 @@ export default function HomePage({
   const d = IND[industry];
   const cases = CASES[industry] ?? [];
   const research = (RESEARCH[industry] ?? RESEARCH.all).slice(0, 3);
-  const practices = (PRACTICES[industry] ?? PRACTICES.it).slice(0, 3);
+  const practices = PRACTICES[industry] ?? [];
+  const liveResearch = contentSource.research[industry] === "live";
+  const livePractices = contentSource.practices[industry] === "live";
+  const liveCases = contentSource.cases[industry] === "live";
+
+  const caseHasMetrics = (c: CaseStudy) =>
+    Boolean((c.m1 && c.l1) || (c.m2 && c.l2));
 
   const setIndustry = useCallback((ind: IndustryKey, fromUser: boolean) => {
     setIndustryState(ind);
@@ -379,21 +387,47 @@ export default function HomePage({
                   <div className="case-stack" id="case-stack" aria-live="polite">
                     {cases.map((c, i) => (
                       <article key={`${industry}-${i}`} className={`case${i === caseIdx ? " on" : ""}`}>
-                        <div className="case-img">
-                          Case study image
-                          <br />
-                          1200&times;680
+                        <div
+                          className={`case-img${c.img ? " loaded" : ""}`}
+                          style={c.img ? { backgroundImage: `url('${c.img}')` } : undefined}
+                        >
+                          {c.img ? null : (
+                            <>
+                              Case study image
+                              <br />
+                              1200&times;680
+                            </>
+                          )}
                         </div>
                         <div className="case-body">
                           <div className="case-tag">Case study &middot; {c.tag}</div>
                           <h3>{c.t}</h3>
                           <p>{c.d}</p>
-                          <div className="case-out">
-                            <div><b>{c.m1}</b><span>{c.l1}</span></div>
-                            <div><b>{c.m2}</b><span>{c.l2}</span></div>
-                          </div>
-                          <a className="textlink" href="#">Read the case study</a>
-                          <div><span className="flag">Named case to be supplied</span></div>
+                          {caseHasMetrics(c) ? (
+                            <div className="case-out">
+                              {c.m1 && c.l1 ? (
+                                <div><b>{c.m1}</b><span>{c.l1}</span></div>
+                              ) : null}
+                              {c.m2 && c.l2 ? (
+                                <div><b>{c.m2}</b><span>{c.l2}</span></div>
+                              ) : null}
+                            </div>
+                          ) : null}
+                          {c.u ? (
+                            <a
+                              className="textlink"
+                              href={c.u}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Read the case study
+                            </a>
+                          ) : (
+                            <a className="textlink" href="#">Read the case study</a>
+                          )}
+                          {!liveCases ? (
+                            <div><span className="flag">Named case to be supplied</span></div>
+                          ) : null}
                         </div>
                       </article>
                     ))}
@@ -494,8 +528,10 @@ export default function HomePage({
                 <p className="label">From the research library</p>
                 <h2 id="res-title">The research behind <span data-ind-short="">{d.short}</span></h2>
                 <p className="lede">
-                  Peer-reviewed studies, whitepapers and sector analysis from the OLL Research Academy.{" "}
-                  <span className="flag">Showing live library items; supply IT and BFSI URLs to swap</span>
+                  Peer-reviewed studies, whitepapers and sector analysis from the OLL Research Academy.
+                  {!liveResearch ? (
+                    <>{" "}<span className="flag">Showing live library items; supply IT and BFSI URLs to swap</span></>
+                  ) : null}
                 </p>
               </div>
               <Seg industry={industry} onSelect={selectIndustry} />
@@ -506,7 +542,12 @@ export default function HomePage({
               ))}
             </div>
             <div className="sec-foot">
-              <a className="btn btn-ghost" href="https://research.ollacademy.com/research?type=internal" target="_blank" rel="noopener">
+              <a
+                className="btn btn-ghost"
+                href={marketplaceViewAllUrl("research_synopsis")}
+                target="_blank"
+                rel="noopener"
+              >
                 View all research
               </a>
             </div>
@@ -556,8 +597,10 @@ export default function HomePage({
                 <p className="label">Best practices</p>
                 <h2 id="bp-title">What works, tested over time in <span data-ind-short="">{d.short}</span></h2>
                 <p className="lede">
-                  Proven methods, techniques and frameworks that hold up in practice, written for the leaders who have to run them.{" "}
-                  <span className="flag">Placeholder entries; supply real practice notes and URLs</span>
+                  Proven methods, techniques and frameworks that hold up in practice, written for the leaders who have to run them.
+                  {!livePractices ? (
+                    <>{" "}<span className="flag">Placeholder entries; supply real practice notes and URLs</span></>
+                  ) : null}
                 </p>
               </div>
               <Seg industry={industry} onSelect={selectIndustry} />
@@ -568,7 +611,14 @@ export default function HomePage({
               ))}
             </div>
             <div className="sec-foot">
-              <a className="btn btn-ghost" href="#">View all best practices</a>
+              <a
+                className="btn btn-ghost"
+                href={marketplaceViewAllUrl("best_practice")}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View all best practices
+              </a>
             </div>
           </div>
         </section>

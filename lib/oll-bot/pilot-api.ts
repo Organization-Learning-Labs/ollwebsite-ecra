@@ -28,6 +28,7 @@ export const PILOT_STORAGE = {
   organizationName: 'oll_pilot_organization_name',
   nominatorName: 'oll_pilot_nominator_name',
   nominatorEmail: 'oll_pilot_nominator_email',
+  industry: 'oll_pilot_industry',
 } as const;
 
 export type PilotSessionContext = {
@@ -37,6 +38,7 @@ export type PilotSessionContext = {
   nominator_email?: string;
   nominator_role?: string;
   organization_name?: string;
+  industry?: string;
 };
 
 /** Public outreach track payload (from GET /pilot/outreach/track). */
@@ -50,21 +52,49 @@ export type OutreachTrackPayload = {
   campaign_title?: string;
 };
 
+function pickString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return undefined;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+}
+
 export function parseOutreachTrackResponse(data: unknown): OutreachTrackPayload {
-  const root = (data ?? {}) as Record<string, unknown>;
-  const payload = (root.data ?? root) as Record<string, unknown>;
-  const str = (key: string) => {
-    const v = payload[key];
-    return typeof v === 'string' ? v.trim() : '';
-  };
+  const root = asRecord(data);
+  const payload = asRecord(root.data ?? root);
+  const executive = asRecord(payload.executive ?? payload.person);
   return {
-    status: str('status') || undefined,
-    executive_name: str('executive_name') || undefined,
-    executive_email: str('executive_email') || undefined,
-    executive_job_title: str('executive_job_title') || undefined,
-    company: str('company') || undefined,
-    industry: str('industry') || undefined,
-    campaign_title: str('campaign_title') || undefined,
+    status: pickString(payload.status),
+    executive_name: pickString(
+      payload.executive_name,
+      executive.executive_name,
+      executive.name,
+      payload.name
+    ),
+    executive_email: pickString(
+      payload.executive_email,
+      executive.executive_email,
+      executive.email,
+      payload.email
+    ),
+    executive_job_title: pickString(
+      payload.executive_job_title,
+      executive.executive_job_title,
+      executive.job_title,
+      payload.job_title
+    ),
+    company: pickString(
+      payload.company,
+      payload.organization_name,
+      executive.company,
+      executive.organization_name
+    ),
+    industry: pickString(payload.industry, executive.industry),
+    campaign_title: pickString(payload.campaign_title, payload.campaign),
   };
 }
 
@@ -81,6 +111,9 @@ export function persistOutreachTrackContext(track: OutreachTrackPayload) {
   if (track.company) {
     writePilotSessionValue(PILOT_STORAGE.organizationName, track.company);
   }
+  if (track.industry) {
+    writePilotSessionValue(PILOT_STORAGE.industry, track.industry);
+  }
 }
 
 export function readPilotSessionContext(): PilotSessionContext {
@@ -94,6 +127,7 @@ export function readPilotSessionContext(): PilotSessionContext {
       nominator_role: sessionStorage.getItem(PILOT_STORAGE.nominatorRole) || undefined,
       organization_name:
         sessionStorage.getItem(PILOT_STORAGE.organizationName) || undefined,
+      industry: sessionStorage.getItem(PILOT_STORAGE.industry) || undefined,
     };
   } catch {
     return {};

@@ -32,6 +32,19 @@ function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+function findClosestOption(options: AutocompleteOption[], query?: string) {
+  const q = query?.trim().toLowerCase();
+  if (!q || options.length === 0) return null;
+  return (
+    options.find((option) => option.label.toLowerCase() === q) ||
+    options.find((option) => option.label.toLowerCase().startsWith(q)) ||
+    options.find((option) => option.label.toLowerCase().includes(q)) ||
+    options.find((option) => option.hint?.toLowerCase().includes(q)) ||
+    options.find((option) => q.includes(option.label.toLowerCase())) ||
+    null
+  );
+}
+
 export function NominationForm({
   title = 'Nominate an employee',
   subtitle = 'Nominate someone for a diagnostic scan. We will provision access and send them an invitation.',
@@ -44,7 +57,10 @@ export function NominationForm({
   executive_id,
   nominee_name,
   nominee_email,
+  nominee_job_title,
   nominee_dept,
+  nominee_industry,
+  lockIdentity,
   pilotContext,
   onSuccess,
 }: NominationFormProps & {
@@ -60,8 +76,23 @@ export function NominationForm({
     [pilotContext]
   );
 
-  const [nomineeName, setNomineeName] = useState(nominee_name?.trim() || '');
-  const [nomineeEmail, setNomineeEmail] = useState(nominee_email?.trim() || '');
+  const knownName =
+    nominee_name?.trim() || session.nominator_name?.trim() || '';
+  const knownEmail =
+    nominee_email?.trim() || session.nominator_email?.trim() || '';
+  const knownJob =
+    nominee_job_title?.trim() || session.nominator_role?.trim() || '';
+  const knownCompany =
+    nominee_dept?.trim() || session.organization_name?.trim() || '';
+  const knownIndustry =
+    nominee_industry?.trim() || session.industry?.trim() || '';
+  const isSelfAssess = title === 'Self assess' || Boolean(lockIdentity);
+  const fromInvite = Boolean(
+    isSelfAssess && knownName && isValidEmail(knownEmail)
+  );
+
+  const [nomineeName, setNomineeName] = useState(knownName);
+  const [nomineeEmail, setNomineeEmail] = useState(knownEmail);
   const [industry, setIndustry] = useState<AutocompleteOption | null>(null);
   const [jobRole, setJobRole] = useState<AutocompleteOption | null>(null);
   const [industries, setIndustries] = useState<AutocompleteOption[]>([]);
@@ -141,6 +172,23 @@ export function NominationForm({
     };
   }, [industry]);
 
+  useEffect(() => {
+    if (!nomineeName && knownName) setNomineeName(knownName);
+    if (!nomineeEmail && knownEmail) setNomineeEmail(knownEmail);
+  }, [knownName, knownEmail, nomineeName, nomineeEmail]);
+
+  useEffect(() => {
+    if (industry || industries.length === 0) return;
+    const match = findClosestOption(industries, knownIndustry);
+    if (match) setIndustry(match);
+  }, [industries, knownIndustry, industry]);
+
+  useEffect(() => {
+    if (jobRole || roles.length === 0) return;
+    const match = findClosestOption(roles, knownJob);
+    if (match) setJobRole(match);
+  }, [roles, knownJob, jobRole]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!industry || !jobRole) {
@@ -214,21 +262,41 @@ export function NominationForm({
         <p className="text-sm font-semibold text-primary-800">{title}</p>
         <p className="mt-1 text-[12px] text-gray-500">{subtitle}</p>
       </div>
-      <input
-        required
-        value={nomineeName}
-        onChange={(e) => setNomineeName(e.target.value)}
-        placeholder="Nominee full name"
-        className="oll-form-field"
-      />
-      <input
-        required
-        type="email"
-        value={nomineeEmail}
-        onChange={(e) => setNomineeEmail(e.target.value)}
-        placeholder="Nominee work email"
-        className="oll-form-field"
-      />
+      {isSelfAssess && (knownName || knownEmail) ? (
+        <div className="oll-known-person">
+          <p className="oll-known-person-kicker">
+            {fromInvite ? 'From your invitation' : 'Your details'}
+          </p>
+          <p className="oll-known-person-name">{nomineeName || knownName || 'Your name'}</p>
+          {nomineeEmail || knownEmail ? (
+            <p className="oll-known-person-email">{nomineeEmail || knownEmail}</p>
+          ) : null}
+          {knownJob || knownIndustry || knownCompany ? (
+            <p className="oll-known-person-meta">
+              {[knownJob, knownIndustry, knownCompany].filter(Boolean).join(' · ')}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {fromInvite ? null : (
+        <>
+          <input
+            required
+            value={nomineeName}
+            onChange={(e) => setNomineeName(e.target.value)}
+            placeholder="Nominee full name"
+            className="oll-form-field"
+          />
+          <input
+            required
+            type="email"
+            value={nomineeEmail}
+            onChange={(e) => setNomineeEmail(e.target.value)}
+            placeholder="Nominee work email"
+            className="oll-form-field"
+          />
+        </>
+      )}
       {identityReady ? (
         <AutocompleteField
           value={industry}
