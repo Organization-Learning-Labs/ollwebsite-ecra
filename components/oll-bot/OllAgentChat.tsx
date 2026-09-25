@@ -8,7 +8,12 @@ import type { AgentChatReply, AgentHistoryItem } from '@/lib/oll-bot/agents';
 import { BotMessageContent } from '@/components/oll-bot/BotMessageContent';
 import { CatalogRenderer } from '@/components/oll-bot/catalog/CatalogRenderer';
 import { AssessmentCarousel } from '@/components/oll-bot/catalog/AssessmentCarousel';
-import { parseOllUi, type CatalogNode } from '@/lib/oll-bot/catalog';
+import {
+  parseOllUi,
+  type CatalogNode,
+  type JobRoleSubmitPayload,
+  type RoleMatchActionsProps,
+} from '@/lib/oll-bot/catalog';
 import {
   cleanupOfferReply,
   extractAssessmentOffers,
@@ -28,6 +33,24 @@ import { useOllieBotOptional } from '@/components/oll-bot/OllieBotContext';
 
 const NOMINATE_STARTER = 'Nominate an employee for a diagnostic scan';
 const SELF_ASSESS_STARTER = 'Self assess';
+const MARKETPLACE_STARTER = 'Go to marketplace';
+const JOB_ROLE_STARTER = 'Tell us your job role';
+
+const INTERACTIVE_FORM_TYPES = ['nomination_form', 'job_role_form'] as const;
+type InteractiveFormType = (typeof INTERACTIVE_FORM_TYPES)[number];
+
+function isInteractiveFormNode(node: CatalogNode): node is CatalogNode & {
+  type: InteractiveFormType;
+} {
+  return INTERACTIVE_FORM_TYPES.includes(node.type as InteractiveFormType);
+}
+
+function messageHasInteractiveForm(msg: ChatMessage): boolean {
+  return (
+    msg.role === 'assistant' &&
+    (msg.catalog?.some((node) => isInteractiveFormNode(node)) ?? false)
+  );
+}
 
 function messageHasNominationForm(msg: ChatMessage): boolean {
   return (
@@ -36,13 +59,13 @@ function messageHasNominationForm(msg: ChatMessage): boolean {
   );
 }
 
-function stripNominationForms(messages: ChatMessage[]): ChatMessage[] {
+function stripInteractiveForms(messages: ChatMessage[]): ChatMessage[] {
   return messages
     .map((msg) => {
-      if (!msg.catalog?.some((node) => node.type === 'nomination_form')) {
+      if (!msg.catalog?.some((node) => isInteractiveFormNode(node))) {
         return msg;
       }
-      const catalog = msg.catalog.filter((node) => node.type !== 'nomination_form');
+      const catalog = msg.catalog.filter((node) => !isInteractiveFormNode(node));
       if (catalog.length === 0 && !msg.text.trim()) {
         return null;
       }
@@ -54,20 +77,20 @@ function stripNominationForms(messages: ChatMessage[]): ChatMessage[] {
     .filter((msg): msg is ChatMessage => msg !== null);
 }
 
-/** Drop assistant bubbles that only hosted a nomination/self-assess form. */
-function dropNominationFormMessages(messages: ChatMessage[]): ChatMessage[] {
-  return messages.filter((msg) => !messageHasNominationForm(msg));
+/** Drop assistant bubbles that only hosted an interactive form. */
+function dropInteractiveFormMessages(messages: ChatMessage[]): ChatMessage[] {
+  return messages.filter((msg) => !messageHasInteractiveForm(msg));
 }
 
-function catalogWithoutStaleNominationForms(
+function catalogWithoutStaleInteractiveForms(
   catalog: CatalogNode[] | undefined,
   messageId: string,
-  activeNominationFormMessageId: string | null
+  activeInteractiveFormMessageId: string | null
 ): CatalogNode[] {
   if (!catalog?.length) return [];
   return catalog.filter(
     (node) =>
-      node.type !== 'nomination_form' || messageId === activeNominationFormMessageId
+      !isInteractiveFormNode(node) || messageId === activeInteractiveFormMessageId
   );
 }
 
@@ -658,10 +681,10 @@ export function OllAgentChat({
     setMessages((prev) => [...prev, { id: msg.id || newId(), ...msg }]);
   }, []);
 
-  const appendNominationForm = useCallback(
+  const appendBotForm = useCallback(
     (userText: string, assistant: Omit<ChatMessage, 'id' | 'role'>) => {
       setMessages((prev) => [
-        ...dropNominationFormMessages(prev),
+        ...dropInteractiveFormMessages(prev),
         { id: newId(), role: 'user', text: userText },
         { id: newId(), role: 'assistant', ...assistant },
       ]);
@@ -669,9 +692,9 @@ export function OllAgentChat({
     []
   );
 
-  const activeNominationFormMessageId = useMemo(() => {
+  const activeInteractiveFormMessageId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
-      if (messageHasNominationForm(messages[i])) return messages[i].id;
+      if (messageHasInteractiveForm(messages[i])) return messages[i].id;
     }
     return null;
   }, [messages]);
@@ -752,9 +775,9 @@ export function OllAgentChat({
         const offers = reply.assessment_offers || [];
         const visibleText = cleanupOfferReply(parsedText || answer, offers);
 
-        const hasNewNominationForm = nodes.some((node) => node.type === 'nomination_form');
+        const hasNewInteractiveForm = nodes.some((node) => isInteractiveFormNode(node));
         setMessages((prev) => [
-          ...(hasNewNominationForm ? stripNominationForms(prev) : prev),
+          ...(hasNewInteractiveForm ? stripInteractiveForms(prev) : prev),
           {
             id: newId(),
             role: 'assistant',
@@ -789,6 +812,146 @@ export function OllAgentChat({
       }
     },
     [agentHistory, appendMessage, busy, sessionId]
+  );
+
+  const handleJobRoleSubmit = useCallback(
+    async (payload: JobRoleSubmitPayload) => {
+      if (busy || !sessionId) return;
+
+      const userText = `${payload.job_role} in ${payload.industry}`;
+      const agentPrompt = `Show assessments I can take to diagnose myself as a ${payload.job_role} in ${payload.industry}.`;
+
+      setMessages((prev) => [
+        ...stripInteractiveForms(prev),
+        { id: newId(), role: 'user', text: userText },
+      ]);
+      setStreamingText('');
+      setStreamingIsReply(false);
+      setBusy(true);
+
+      const historyForRequest = agentHistory.slice();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      try {
+        let reply: AgentChatReply;
+        try {
+          reply = await streamChat(
+            agentPrompt,
+            sessionId,
+            historyForRequest,
+            controller.signal,
+            (update) => {
+              setStreamingText(update.text);
+              setStreamingIsReply(!!update.isReply);
+            }
+          );
+        } catch {
+          reply = await waitChat(agentPrompt, sessionId, historyForRequest);
+        }
+
+        if (isWebSearchInfraFailure(reply.reply || '')) {
+          reply = await waitChat(agentPrompt, sessionId, historyForRequest);
+        }
+
+        const answer = sanitizeAgentReply(
+          reply.reply ||
+            (reply.refused ? 'Refused (no reason returned)' : '(empty reply)')
+        );
+
+        const { text: parsedText, nodes } = parseOllUi(answer);
+        const offers = reply.assessment_offers || [];
+        const visibleText = cleanupOfferReply(parsedText || answer, offers);
+
+        const resultText =
+          offers.length > 0
+            ? visibleText ||
+              `Here are assessments matched to ${payload.job_role} in ${payload.industry}.`
+            : "We couldn't auto-match a listing. Start a diagnostic scan or browse the marketplace.";
+
+        const resultCatalog: CatalogNode[] = [
+          {
+            type: 'role_match_actions',
+            props: {
+              industry: payload.industry,
+              industry_id: payload.industry_id,
+              job_role: payload.job_role,
+              job_role_id: payload.job_role_id,
+            },
+          },
+          { type: 'marketplace_link', props: {} },
+          ...nodes.filter((node) => !isInteractiveFormNode(node)),
+        ];
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: newId(),
+            role: 'assistant',
+            text: resultText,
+            refused: false,
+            status: reply.status,
+            catalog: resultCatalog,
+            offers: offers.length > 0 ? offers : undefined,
+          },
+        ]);
+
+        setAgentHistory((prev) =>
+          [
+            ...prev,
+            { role: 'user' as const, content: agentPrompt },
+            { role: 'assistant' as const, content: resultText },
+          ].slice(-40)
+        );
+      } catch (err) {
+        appendMessage({
+          role: 'system',
+          text: err instanceof Error ? err.message : 'Something went wrong',
+          status: 'error',
+        });
+      } finally {
+        abortRef.current = null;
+        setStreamingText('');
+        setStreamingIsReply(false);
+        setBusy(false);
+      }
+    },
+    [agentHistory, appendMessage, busy, sessionId]
+  );
+
+  const handleDiagnoseFromRole = useCallback(
+    (prefill: RoleMatchActionsProps) => {
+      if (busy) return;
+      const ctx = { ...readPilotSessionContext(), ...pilotContext };
+      const knownName = ctx.nominator_name?.trim() || '';
+      const knownEmail = ctx.nominator_email?.trim() || '';
+      const fromEmail = Boolean(ctx.campaign_id && ctx.executive_id && (knownName || knownEmail));
+
+      appendBotForm('Diagnose yourself', {
+        text: fromEmail
+          ? 'These are the details from your invitation. Confirm them and adjust your industry or job role if needed.'
+          : 'Confirm your details below to start your diagnostic scan.',
+        catalog: [
+          {
+            type: 'nomination_form',
+            props: {
+              title: 'Self assess',
+              subtitle: fromEmail
+                ? 'We suggested your details from your invitation email. You can change your industry and job role before starting.'
+                : 'We will match you to a diagnostic assessment and send you an invitation.',
+              submitLabel: 'Start my diagnostic scan',
+              nominee_name: knownName || undefined,
+              nominee_email: knownEmail || undefined,
+              nominee_job_title: prefill.job_role || ctx.nominator_role,
+              nominee_dept: ctx.organization_name,
+              nominee_industry: prefill.industry || ctx.industry,
+              lockIdentity: fromEmail && Boolean(knownName && knownEmail),
+            },
+          },
+        ],
+      });
+    },
+    [appendBotForm, busy, pilotContext]
   );
 
   const handleFlowReply = useCallback(
@@ -851,9 +1014,34 @@ export function OllAgentChat({
     }
     const normalized = message.trim().toLowerCase();
 
+    if (normalized === MARKETPLACE_STARTER.toLowerCase()) {
+      appendBotForm(message.trim(), {
+        text: 'You can browse assessments, research, and best practices on the OLL Academy marketplace.',
+        catalog: [{ type: 'marketplace_link', props: {} }],
+      });
+      return;
+    }
+
+    if (normalized === JOB_ROLE_STARTER.toLowerCase()) {
+      appendBotForm(message.trim(), {
+        text: 'Tell us your industry and job role — we will match assessments you can use to diagnose yourself.',
+        catalog: [
+          {
+            type: 'job_role_form',
+            props: {
+              title: 'Tell us your job role',
+              subtitle: 'We will match assessments you can use to diagnose yourself.',
+              submitLabel: 'Show matching assessments',
+            },
+          },
+        ],
+      });
+      return;
+    }
+
     // Surface nomination form immediately for the dedicated starter chip
     if (normalized === NOMINATE_STARTER.toLowerCase()) {
-      appendNominationForm(message.trim(), {
+      appendBotForm(message.trim(), {
         text: 'Share the employee details below to nominate them for a diagnostic scan.',
         catalog: [
           {
@@ -874,7 +1062,7 @@ export function OllAgentChat({
       const knownName = ctx.nominator_name?.trim() || '';
       const knownEmail = ctx.nominator_email?.trim() || '';
       const fromEmail = Boolean(ctx.campaign_id && ctx.executive_id && (knownName || knownEmail));
-      appendNominationForm(message.trim(), {
+      appendBotForm(message.trim(), {
         text: fromEmail
           ? 'These are the details from your invitation. Confirm them and adjust your industry or job role if needed.'
           : 'Confirm your details below to start your diagnostic scan.',
@@ -1110,16 +1298,18 @@ export function OllAgentChat({
                   ) : null}
 
                   {!isUser && msg.catalog && msg.catalog.length > 0 ? (() => {
-                    const nodes = catalogWithoutStaleNominationForms(
+                    const nodes = catalogWithoutStaleInteractiveForms(
                       msg.catalog,
                       msg.id,
-                      activeNominationFormMessageId
+                      activeInteractiveFormMessageId
                     );
                     if (nodes.length === 0) return null;
                     return (
                       <CatalogRenderer
                         nodes={nodes}
                         pilotContext={pilotContext}
+                        onJobRoleSubmit={(payload) => void handleJobRoleSubmit(payload)}
+                        onDiagnoseFromRole={handleDiagnoseFromRole}
                       />
                     );
                   })() : null}

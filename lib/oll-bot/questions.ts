@@ -51,6 +51,14 @@ export const ollBotQuestions = {
       message: 'Self assess',
     },
     {
+      label: 'Tell us your job role',
+      message: 'Tell us your job role',
+    },
+    {
+      label: 'Go to marketplace',
+      message: 'Go to marketplace',
+    },
+    {
       label: 'What is OLL Academy?',
       message: 'What is OLL Academy?',
     },
@@ -72,6 +80,14 @@ export const ollBotQuestions = {
     {
       label: 'Nominate an employee for a diagnostic scan',
       message: 'Nominate an employee for a diagnostic scan',
+    },
+    {
+      label: 'Tell us your job role',
+      message: 'Tell us your job role',
+    },
+    {
+      label: 'Go to marketplace',
+      message: 'Go to marketplace',
     },
     {
       label: 'What is OLL Academy?',
