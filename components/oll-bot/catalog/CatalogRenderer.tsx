@@ -1,22 +1,33 @@
 'use client';
 
 import { useState } from 'react';
-import type { CatalogNode } from '@/lib/oll-bot/catalog';
+import type {
+  CatalogNode,
+  JobRoleSubmitPayload,
+  RoleMatchActionsProps,
+} from '@/lib/oll-bot/catalog';
 import type { PilotSessionContext } from '@/lib/oll-bot/pilot-api';
 import { PossibilityCard } from './PossibilityCard';
 import { ConsultationCTA } from './ConsultationCTA';
 import { LeadCaptureForm } from './LeadCaptureForm';
 import { NominationForm } from './NominationForm';
+import { JobRoleForm } from './JobRoleForm';
+import { MarketplaceLinkCard } from './MarketplaceLinkCard';
+import { RoleMatchActions } from './RoleMatchActions';
 import { ThankYouCard } from './ThankYouCard';
 
 export function CatalogRenderer({
   nodes,
   onContinue,
   pilotContext,
+  onJobRoleSubmit,
+  onDiagnoseFromRole,
 }: {
   nodes: CatalogNode[];
   onContinue?: () => void;
   pilotContext?: PilotSessionContext;
+  onJobRoleSubmit?: (payload: JobRoleSubmitPayload) => void;
+  onDiagnoseFromRole?: (prefill: RoleMatchActionsProps) => void;
 }) {
   const [showLead, setShowLead] = useState(false);
   const [thankYou, setThankYou] = useState<'lead' | 'nomination' | null>(null);
@@ -82,6 +93,24 @@ export function CatalogRenderer({
                   setNominationResult(result);
                   setThankYou('nomination');
                 }}
+              />
+            );
+          case 'job_role_form':
+            return (
+              <JobRoleForm
+                key={`c-${i}`}
+                {...node.props}
+                onSubmit={onJobRoleSubmit}
+              />
+            );
+          case 'marketplace_link':
+            return <MarketplaceLinkCard key={`c-${i}`} {...node.props} />;
+          case 'role_match_actions':
+            return (
+              <RoleMatchActions
+                key={`c-${i}`}
+                {...node.props}
+                onDiagnose={() => onDiagnoseFromRole?.(node.props)}
               />
             );
           case 'ThankYouCard':

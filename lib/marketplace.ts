@@ -20,6 +20,11 @@ const PLATFORM_SITE =
   process.env.NEXT_PUBLIC_PLATFORM_SITE_URL?.replace(/\/$/, "") ||
   "https://platform.ollacademy.com";
 
+/** Main OLL Academy marketplace landing (assessments, research, best practices). */
+export function platformMarketplaceUrl(): string {
+  return `${PLATFORM_SITE}/marketplace`;
+}
+
 const RESEARCH_SITE =
   process.env.NEXT_PUBLIC_RESEARCH_SITE_URL?.replace(/\/$/, "") ||
   "https://research.ollacademy.com";

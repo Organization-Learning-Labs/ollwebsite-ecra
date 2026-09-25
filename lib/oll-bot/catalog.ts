@@ -3,6 +3,9 @@ export type CatalogType =
   | 'ConsultationCTA'
   | 'LeadCaptureForm'
   | 'nomination_form'
+  | 'job_role_form'
+  | 'marketplace_link'
+  | 'role_match_actions'
   | 'ThankYouCard';
 
 export const CATALOG_TYPES: CatalogType[] = [
@@ -10,6 +13,9 @@ export const CATALOG_TYPES: CatalogType[] = [
   'ConsultationCTA',
   'LeadCaptureForm',
   'nomination_form',
+  'job_role_form',
+  'marketplace_link',
+  'role_match_actions',
   'ThankYouCard',
 ];
 
@@ -54,11 +60,40 @@ export type ThankYouCardProps = {
   body?: string;
 };
 
+export type JobRoleFormProps = {
+  title?: string;
+  subtitle?: string;
+  submitLabel?: string;
+};
+
+export type MarketplaceLinkProps = {
+  title?: string;
+  body?: string;
+  buttonLabel?: string;
+};
+
+export type RoleMatchActionsProps = {
+  industry?: string;
+  industry_id?: string;
+  job_role?: string;
+  job_role_id?: string;
+};
+
+export type JobRoleSubmitPayload = {
+  industry: string;
+  industry_id: string;
+  job_role: string;
+  job_role_id: string;
+};
+
 export type CatalogNode =
   | { type: 'PossibilityCard'; props: PossibilityCardProps }
   | { type: 'ConsultationCTA'; props: ConsultationCTAProps }
   | { type: 'LeadCaptureForm'; props: LeadCaptureFormProps }
   | { type: 'nomination_form'; props: NominationFormProps }
+  | { type: 'job_role_form'; props: JobRoleFormProps }
+  | { type: 'marketplace_link'; props: MarketplaceLinkProps }
+  | { type: 'role_match_actions'; props: RoleMatchActionsProps }
   | { type: 'ThankYouCard'; props: ThankYouCardProps };
 
 function asString(value: unknown, fallback = ''): string {
@@ -127,6 +162,43 @@ function validateNode(raw: unknown): CatalogNode | null {
           organization_name: asString(props.organization_name) || undefined,
           campaign_id: asString(props.campaign_id) || undefined,
           executive_id: asString(props.executive_id) || undefined,
+        },
+      };
+    case 'job_role_form':
+    case 'JobRoleForm':
+      return {
+        type: 'job_role_form',
+        props: {
+          title: asString(props.title, 'Tell us your job role'),
+          subtitle: asString(
+            props.subtitle,
+            'We will match assessments you can use to diagnose yourself.'
+          ),
+          submitLabel: asString(props.submitLabel, 'Show matching assessments'),
+        },
+      };
+    case 'marketplace_link':
+    case 'MarketplaceLink':
+      return {
+        type: 'marketplace_link',
+        props: {
+          title: asString(props.title, 'OLL Academy marketplace'),
+          body: asString(
+            props.body,
+            'Browse assessments, research, and best practices on the OLL Academy marketplace.'
+          ),
+          buttonLabel: asString(props.buttonLabel, 'Open marketplace'),
+        },
+      };
+    case 'role_match_actions':
+    case 'RoleMatchActions':
+      return {
+        type: 'role_match_actions',
+        props: {
+          industry: asString(props.industry) || undefined,
+          industry_id: asString(props.industry_id) || undefined,
+          job_role: asString(props.job_role) || undefined,
+          job_role_id: asString(props.job_role_id) || undefined,
         },
       };
     case 'ThankYouCard':
