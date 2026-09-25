@@ -18,6 +18,7 @@ export default function Footer() {
             <h4>Company</h4>
             <ul>
               <li><Link href="/about">About us</Link></li>
+              <li><Link href="/competence-blueprint">Competence Blueprint</Link></li>
               <li><Link href="/#research">Research</Link></li>
               <li><Link href="/#best-practices">Best practices</Link></li>
               <li><Link href="/#faq">Questions and answers</Link></li>

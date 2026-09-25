@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" fill="none" role="img" aria-hidden="true">
+  <rect width="640" height="400" fill="#F5F8FC"/>
+  <rect x="72" y="260" width="496" height="72" rx="12" fill="#EEF3FB" stroke="#A9C3E7" stroke-width="1.5"/>
+  <rect x="100" y="188" width="440" height="72" rx="12" fill="#D4E1F3" stroke="#7EA5DB" stroke-width="1.5"/>
+  <rect x="128" y="116" width="384" height="72" rx="12" fill="#EEF3FB" stroke="#004F96" stroke-width="1.75"/>
+  <rect x="156" y="44" width="328" height="72" rx="12" fill="#fff" stroke="#004F96" stroke-width="2"/>
+  <line x1="184" y1="72" x2="456" y2="72" stroke="#004F96" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+  <line x1="184" y1="88" x2="400" y2="88" stroke="#5387CF" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+  <line x1="156" y1="144" x2="420" y2="144" stroke="#004F96" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+  <line x1="128" y1="216" x2="460" y2="216" stroke="#2869C3" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+  <circle cx="500" cy="80" r="6" fill="#F59E0B"/>
+  <circle cx="520" cy="152" r="5" fill="#46B749"/>
+  <path d="M500 86v60M506 146h14" stroke="#A9C3E7" stroke-width="1.25" opacity="0.7"/>
+</svg>

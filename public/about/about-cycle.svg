@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" fill="none" role="img" aria-hidden="true">
+  <rect width="640" height="400" fill="#F5F8FC"/>
+  <circle cx="320" cy="200" r="120" stroke="#A9C3E7" stroke-width="1.5" stroke-dasharray="6 8" opacity="0.8"/>
+  <path d="M320 80a120 120 0 0 1 104 60" stroke="#004F96" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M424 140a120 120 0 0 1 0 120" stroke="#2869C3" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M424 260a120 120 0 0 1-104 60" stroke="#5387CF" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M320 320a120 120 0 0 1-104-60" stroke="#F59E0B" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M216 260a120 120 0 0 1 0-120" stroke="#46B749" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M216 140a120 120 0 0 1 104-60" stroke="#004F96" stroke-width="2.25" stroke-linecap="round"/>
+  <polygon points="412,118 430,132 408,140" fill="#004F96"/>
+  <polygon points="440,248 452,268 428,262" fill="#2869C3"/>
+  <polygon points="332,328 312,344 308,320" fill="#5387CF"/>
+  <polygon points="228,282 210,268 232,260" fill="#F59E0B"/>
+  <polygon points="200,152 188,132 212,138" fill="#46B749"/>
+  <polygon points="308,72 328,56 332,80" fill="#004F96"/>
+  <circle cx="320" cy="200" r="14" fill="#EEF3FB" stroke="#004F96" stroke-width="2"/>
+  <circle cx="320" cy="200" r="5" fill="#004F96"/>
+  <circle cx="320" cy="80" r="7" fill="#fff" stroke="#004F96" stroke-width="1.75"/>
+  <circle cx="424" cy="140" r="7" fill="#fff" stroke="#2869C3" stroke-width="1.75"/>
+  <circle cx="424" cy="260" r="7" fill="#fff" stroke="#5387CF" stroke-width="1.75"/>
+  <circle cx="320" cy="320" r="7" fill="#fff" stroke="#F59E0B" stroke-width="1.75"/>
+  <circle cx="216" cy="260" r="7" fill="#fff" stroke="#46B749" stroke-width="1.75"/>
+  <circle cx="216" cy="140" r="7" fill="#fff" stroke="#004F96" stroke-width="1.75"/>
+</svg>
