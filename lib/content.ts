@@ -6,11 +6,9 @@
 import {
   ART_BASE,
   BAND,
-  CASES,
   COMPS,
   HERO_IMAGES,
   IND,
-  PRACTICES,
   RESEARCH,
   TARGET,
   VISIBLE_COMPS,
@@ -60,13 +58,9 @@ async function loadMarketplaceForIndustry(industry: IndustryKey) {
       ? (researchRes.items as CardItem[])
       : (RESEARCH[industry] ?? RESEARCH.all).slice(0, 3),
     researchSource: researchRes.live ? ("live" as const) : ("fallback" as const),
-    practices: practicesRes.live
-      ? (practicesRes.items as CardItem[])
-      : (PRACTICES[industry] ?? PRACTICES.it).slice(0, 3),
+    practices: practicesRes.live ? (practicesRes.items as CardItem[]) : [],
     practicesSource: practicesRes.live ? ("live" as const) : ("fallback" as const),
-    cases: casesRes.live
-      ? (casesRes.items as CaseStudy[])
-      : CASES[industry],
+    cases: casesRes.live ? (casesRes.items as CaseStudy[]) : [],
     casesSource: casesRes.live ? ("live" as const) : ("fallback" as const),
   };
 }

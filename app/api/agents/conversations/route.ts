@@ -1,10 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPilotApiBaseUrl } from '@/lib/oll-bot/pilot-api';
 
+export const runtime = 'nodejs';
+
+function resolvePilotApiBase(): string | null {
+  try {
+    return getPilotApiBaseUrl();
+  } catch {
+    return null;
+  }
+}
+
+/** Best-effort conversation persistence for pilot analytics — optional in local dev. */
 export async function POST(req: NextRequest) {
+  const base = resolvePilotApiBase();
+  if (!base) {
+    return NextResponse.json(
+      {
+        error: 'Conversation tracking is not configured (set NEXT_PUBLIC_API_BASE_URL).',
+        skipped: true,
+      },
+      { status: 503 }
+    );
+  }
+
   try {
     const body = await req.json();
-    const base = getPilotApiBaseUrl();
     const res = await fetch(`${base}/pilot/conversations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -15,7 +36,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to create conversation' },
-      { status: 500 }
+      { status: 502 }
     );
   }
 }
