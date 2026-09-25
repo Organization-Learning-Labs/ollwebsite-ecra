@@ -51,7 +51,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${satoshi.variable} ${newsreader.variable}`}>
-      <body>
+      {/* Extensions such as Grammarly add attributes to body before hydration. */}
+      <body suppressHydrationWarning>
         <OllieBotProvider>
           <JsonLd data={[organizationJsonLd(), websiteJsonLd()]} />
           <a className="skip-link" href="#main">

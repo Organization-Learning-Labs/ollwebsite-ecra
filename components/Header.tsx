@@ -52,6 +52,7 @@ const NAV = [
   { href: "/#best-practices", label: "Best practices" },
   { href: "/#shift", label: "Operating model" },
   { href: "/#ecra", label: "Assessment" },
+  { href: "/competence-blueprint", label: "Blueprint", ariaLabel: "Competence Blueprint" },
   { href: "/#dap", label: "DAP" },
   { href: "/about", label: "About us" },
 ] as const;
@@ -130,6 +131,9 @@ export default function Header() {
           </div>
           <Link href="/#shift">Operating model</Link>
           <Link href="/#ecra">Assessment</Link>
+          <Link href="/competence-blueprint" aria-label="Competence Blueprint">
+            Blueprint
+          </Link>
           <Link href="/#dap">DAP</Link>
         </nav>
         <div className="nav-cta">
@@ -191,7 +195,12 @@ export default function Header() {
       >
         <nav className="mobile-nav-links" aria-label="Mobile">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} onClick={closeMobile}>
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-label={"ariaLabel" in item ? item.ariaLabel : undefined}
+              onClick={closeMobile}
+            >
               {item.label}
             </Link>
           ))}

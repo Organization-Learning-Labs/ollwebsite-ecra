@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" fill="none" role="img" aria-hidden="true">
+  <rect width="640" height="400" fill="#EEF3FB"/>
+  <circle cx="320" cy="200" r="150" stroke="#A9C3E7" stroke-width="1.5" fill="#fff" fill-opacity="0.35"/>
+  <circle cx="320" cy="200" r="110" stroke="#7EA5DB" stroke-width="1.75" fill="#D4E1F3" fill-opacity="0.35"/>
+  <circle cx="320" cy="200" r="70" stroke="#2869C3" stroke-width="1.75" fill="#EEF3FB" fill-opacity="0.6"/>
+  <circle cx="320" cy="200" r="32" stroke="#004F96" stroke-width="2" fill="#004F96" fill-opacity="0.12"/>
+  <circle cx="320" cy="200" r="10" fill="#004F96"/>
+  <circle cx="320" cy="50" r="5" fill="#004F96"/>
+  <circle cx="470" cy="200" r="5" fill="#2869C3"/>
+  <circle cx="320" cy="350" r="5" fill="#004F96"/>
+  <circle cx="170" cy="200" r="5" fill="#2869C3"/>
+  <circle cx="426" cy="94" r="4" fill="#F59E0B"/>
+  <circle cx="426" cy="306" r="4" fill="#46B749"/>
+  <circle cx="214" cy="94" r="4" fill="#5387CF"/>
+  <circle cx="214" cy="306" r="4" fill="#5387CF"/>
+  <path d="M320 68v32M452 200h-32M320 332v-32M188 200h32" stroke="#004F96" stroke-width="1.25" opacity="0.4" stroke-linecap="round"/>
+</svg>

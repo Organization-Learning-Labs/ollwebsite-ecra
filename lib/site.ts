@@ -44,7 +44,14 @@ export const pages: Record<string, SitePage> = {
     path: "/about",
     title: "About OLL — The Organization Learning Labs",
     description:
-      "How OLL connects future requirements to organizational capabilities, role competencies and individual readiness.",
+      "OLL builds a research-led enterprise capability transformation platform—connecting research, competence blueprints, ECRA and reinvention.",
+    absoluteTitle: true,
+  },
+  competenceBlueprint: {
+    path: "/competence-blueprint",
+    title: "Competence Blueprint — OLL",
+    description:
+      "The OLL Competence Blueprint connects future organization archetypes to capabilities, role-based competence and transformation action.",
     absoluteTitle: true,
   },
   privacy: {
