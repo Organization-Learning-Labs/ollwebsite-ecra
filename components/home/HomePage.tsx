@@ -96,6 +96,14 @@ export default function HomePage({
   } = content;
 
   const [industry, setIndustryState] = useState<IndustryKey>(initialIndustry);
+
+  // Keep in sync when ?industry= changes via Next.js client navigation (footer links, etc.).
+  useEffect(() => {
+    setIndustryState(initialIndustry);
+    setCaseIdx(0);
+    setPicked(null);
+    setCaseNonce((n) => n + 1);
+  }, [initialIndustry]);
   const [heroLoaded, setHeroLoaded] = useState<Record<IndustryKey, boolean>>({ it: false, bfsi: false });
   const [path, setPath] = useState<PathKey>("org");
   const [picked, setPicked] = useState<number | null>(null);
@@ -126,14 +134,17 @@ export default function HomePage({
     setPicked(null);
     setCaseIdx(0);
     setCaseNonce((n) => n + 1);
-    if (fromUser) {
+    if (fromUser && typeof document !== "undefined") {
+      const label = IND[ind].name;
+      document.title = `The Organization Learning Labs — Capability readiness for ${label}`;
       try {
         const u = new URL(window.location.href);
-        u.searchParams.set("industry", ind);
+        if (ind === "it") u.searchParams.delete("industry");
+        else u.searchParams.set("industry", ind);
         window.history.replaceState(null, "", u);
       } catch {}
     }
-  }, []);
+  }, [IND]);
   const selectIndustry = useCallback((ind: IndustryKey) => setIndustry(ind, true), [setIndustry]);
 
   // Swap in stock photos; if an image can't load, the designed gradient stays in place.

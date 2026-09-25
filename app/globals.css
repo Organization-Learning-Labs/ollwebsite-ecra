@@ -170,9 +170,10 @@ footer
 .cbtn{width:32px;height:32px;border-radius:50%;border:1px solid var(--deep-line);background:rgba(255,255,255,.06);color:#fff;display:grid;place-items:center;}
 .cbtn:hover{border-color:#fff;background:rgba(255,255,255,.14);}
 .cbtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;}
-.case-stack{position:relative;}
-.case{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .45s ease;background:rgba(255,255,255,.96);color:#12233B;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 30px 70px -25px rgba(0,0,0,.6);}
-.case.on{position:relative;opacity:1;visibility:visible;}
+.case-stack{position:relative;overflow:hidden;}
+.case{position:absolute;inset:0;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .45s ease;background:rgba(255,255,255,.96);color:#12233B;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 30px 70px -25px rgba(0,0,0,.6);}
+.case.on{position:relative;opacity:1;visibility:visible;pointer-events:auto;}
+.story-tabs{position:relative;z-index:2;}
 .case-dots{display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
 .case-dots button{width:22px;height:4px;border-radius:99px;border:0;background:rgba(255,255,255,.28);padding:0;}
 .case-dots button[aria-selected="true"]{background:var(--amber-bright);width:30px;}
