@@ -6,12 +6,28 @@ import {
 } from '@/lib/oll-bot/agents';
 import { fetchApprovedSourceContext } from '@/lib/oll-bot/approved-sources';
 import { buildGuardedMessage } from '@/lib/oll-bot/guardrails';
+import {
+  chatQuotaErrorMessage,
+  consumeChatQuota,
+  getClientIp,
+} from '@/lib/oll-bot/rate-limit';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   try {
+    const quota = consumeChatQuota(getClientIp(request));
+    if (!quota.ok) {
+      return NextResponse.json(
+        { error: chatQuotaErrorMessage(quota.reason) },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(quota.retryAfterSec) },
+        }
+      );
+    }
+
     const body = parseAgentChatBody(await request.json());
     const provider = createAgentsProvider(getAgentsConfig());
     const sourceContext = await fetchApprovedSourceContext();

@@ -117,8 +117,6 @@ export default function HomePage({
   const research = (RESEARCH[industry] ?? RESEARCH.all).slice(0, 3);
   const practices = PRACTICES[industry] ?? [];
   const liveResearch = contentSource.research[industry] === "live";
-  const livePractices = contentSource.practices[industry] === "live";
-  const liveCases = contentSource.cases[industry] === "live";
 
   const caseHasMetrics = (c: CaseStudy) =>
     Boolean((c.m1 && c.l1) || (c.m2 && c.l2));
@@ -360,8 +358,9 @@ export default function HomePage({
                 >
                   <div className="case-head">
                     <span className="case-count" id="case-count">
-                      {cases.length ? `Case study ${caseIdx + 1} of ${cases.length}` : ""}
+                      {cases.length ? `Case study ${caseIdx + 1} of ${cases.length}` : "No case studies yet"}
                     </span>
+                    {cases.length > 1 ? (
                     <div className="case-nav">
                       <button className="cbtn" id="case-prev" aria-label="Previous case study" onClick={() => showCase(caseIdx - 1)}>
                         <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" /></svg>
@@ -383,15 +382,18 @@ export default function HomePage({
                         <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" /></svg>
                       </button>
                     </div>
+                    ) : null}
                   </div>
+                  {cases.length === 0 ? (
+                    <p className="case-empty">No case studies are available for this industry yet.</p>
+                  ) : (
                   <div className="case-stack" id="case-stack" aria-live="polite">
                     {cases.map((c, i) => (
                       <article key={`${industry}-${i}`} className={`case${i === caseIdx ? " on" : ""}`}>
-                        <div
-                          className={`case-img${c.img ? " loaded" : ""}`}
-                          style={c.img ? { backgroundImage: `url('${c.img}')` } : undefined}
-                        >
-                          {c.img ? null : (
+                        <div className={`case-img${c.img ? " loaded" : ""}`}>
+                          {c.img ? (
+                            <img src={c.img} alt="" loading="lazy" decoding="async" />
+                          ) : (
                             <>
                               Case study image
                               <br />
@@ -422,16 +424,13 @@ export default function HomePage({
                             >
                               Read the case study
                             </a>
-                          ) : (
-                            <a className="textlink" href="#">Read the case study</a>
-                          )}
-                          {!liveCases ? (
-                            <div><span className="flag">Named case to be supplied</span></div>
                           ) : null}
                         </div>
                       </article>
                     ))}
                   </div>
+                  )}
+                  {cases.length > 1 ? (
                   <div className="case-dots" id="case-dots" role="tablist" aria-label="Case studies">
                     {cases.map((_, i) => (
                       <button
@@ -443,6 +442,7 @@ export default function HomePage({
                       />
                     ))}
                   </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -598,18 +598,19 @@ export default function HomePage({
                 <h2 id="bp-title">What works, tested over time in <span data-ind-short="">{d.short}</span></h2>
                 <p className="lede">
                   Proven methods, techniques and frameworks that hold up in practice, written for the leaders who have to run them.
-                  {!livePractices ? (
-                    <>{" "}<span className="flag">Placeholder entries; supply real practice notes and URLs</span></>
-                  ) : null}
                 </p>
               </div>
               <Seg industry={industry} onSelect={selectIndustry} />
             </div>
+            {practices.length ? (
             <div className="res-grid" id="bp-grid">
               {practices.map((r) => (
-                <ResCard key={r.t} r={r} read="Read the practice note" />
+                <ResCard key={r.u || r.t} r={r} read="Read the practice note" external />
               ))}
             </div>
+            ) : (
+              <p className="content-empty">No best practices are available for this industry yet.</p>
+            )}
             <div className="sec-foot">
               <a
                 className="btn btn-ghost"

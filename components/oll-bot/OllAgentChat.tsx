@@ -30,11 +30,50 @@ import {
   type PilotSessionContext,
 } from '@/lib/oll-bot/pilot-api';
 import { useOllieBotOptional } from '@/components/oll-bot/OllieBotContext';
+import {
+  BOT_LIMIT_MESSAGES,
+  getBotRemainingTurns,
+  incrementBotTurnCount,
+  isBotQuotaExhausted,
+  markBotQuotaExhausted,
+  type BotQuotaScope,
+} from '@/lib/oll-bot/bot-quota';
+import { getPinnedFaqAnswer } from '@/lib/oll-bot/faq';
 
 const NOMINATE_STARTER = 'Nominate an employee for a diagnostic scan';
 const SELF_ASSESS_STARTER = 'Self assess';
 const MARKETPLACE_STARTER = 'Go to marketplace';
 const JOB_ROLE_STARTER = 'Tell us your job role';
+
+const HOME_NON_AGENT_STARTER_MESSAGES = new Set([
+  NOMINATE_STARTER.toLowerCase(),
+  MARKETPLACE_STARTER.toLowerCase(),
+]);
+
+const PILOT_NON_AGENT_STARTER_MESSAGES = new Set([
+  SELF_ASSESS_STARTER.toLowerCase(),
+  NOMINATE_STARTER.toLowerCase(),
+  MARKETPLACE_STARTER.toLowerCase(),
+]);
+
+class ChatQuotaExceededError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ChatQuotaExceededError';
+  }
+}
+
+function isDailyQuotaMessage(message: string): boolean {
+  return (
+    message.includes('chat limit for today') ||
+    message === BOT_LIMIT_MESSAGES.home ||
+    message === BOT_LIMIT_MESSAGES.pilot
+  );
+}
+
+function botQuotaScope(isPilotRoom: boolean): BotQuotaScope {
+  return isPilotRoom ? 'pilot' : 'home';
+}
 
 const INTERACTIVE_FORM_TYPES = ['nomination_form', 'job_role_form'] as const;
 type InteractiveFormType = (typeof INTERACTIVE_FORM_TYPES)[number];
@@ -166,6 +205,11 @@ async function waitChat(
     body: JSON.stringify({ message, session_id: sessionId, history }),
   });
   const data = (await res.json()) as Record<string, unknown>;
+  if (res.status === 429) {
+    throw new ChatQuotaExceededError(
+      String(data.error || BOT_LIMIT_MESSAGES.home)
+    );
+  }
   if (!res.ok) {
     throw new Error(String(data.error || `HTTP ${res.status}`));
   }
@@ -262,6 +306,10 @@ async function streamChat(
     signal,
   });
 
+  if (res.status === 429) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new ChatQuotaExceededError(data.error || BOT_LIMIT_MESSAGES.home);
+  }
   if (!res.ok) {
     const data = (await res.json().catch(() => ({}))) as { error?: string };
     throw new Error(data.error || `HTTP ${res.status}`);
@@ -342,14 +390,14 @@ async function streamChat(
 }
 
 function buildInitialMessages(): ChatMessage[] {
-  const flow = ollBotQuestions.flow;
-  const messages: ChatMessage[] = [
+  return [
     { id: newId(), role: 'assistant', text: ollBotQuestions.welcome },
+    {
+      id: newId(),
+      role: 'assistant',
+      text: ollBotQuestions.homeSuggestion,
+    },
   ];
-  if (flow[0]) {
-    messages.push({ id: newId(), role: 'assistant', text: flow[0].prompt });
-  }
-  return messages;
 }
 
 function buildPilotLandingMessages(track: OutreachTrackPayload): ChatMessage[] {
@@ -448,6 +496,7 @@ export function OllAgentChat({
   const [hydrated, setHydrated] = useState(false);
   const [expanded, setExpanded] = useState(isPilotRoom);
   const [pilotContext, setPilotContext] = useState<PilotSessionContext>({});
+  const [agentQuotaExhausted, setAgentQuotaExhausted] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -551,31 +600,9 @@ export function OllAgentChat({
               : buildPilotLandingMessages({})
           );
         } else {
-          const savedStep = Number(sessionStorage.getItem(FLOW_KEY) || '0');
-          const step = Number.isFinite(savedStep) ? Math.max(0, savedStep) : 0;
-          setFlowStep(step);
-
-          if (step >= ollBotQuestions.flow.length) {
-            setMessages([
-              { id: newId(), role: 'assistant', text: ollBotQuestions.welcome },
-              {
-                id: newId(),
-                role: 'assistant',
-                text: 'Ask anything about OLL, or tap a suggestion below.',
-              },
-            ]);
-          } else if (step > 0 && ollBotQuestions.flow[step]) {
-            setMessages([
-              { id: newId(), role: 'assistant', text: ollBotQuestions.welcome },
-              {
-                id: newId(),
-                role: 'assistant',
-                text: ollBotQuestions.flow[step].prompt,
-              },
-            ]);
-          } else {
-            setMessages(buildInitialMessages());
-          }
+          // Home bot skips intake — show welcome + starter chips immediately.
+          setFlowStep(ollBotQuestions.flow.length);
+          setMessages(buildInitialMessages());
         }
       } catch {
         if (!cancelled) {
@@ -585,7 +612,12 @@ export function OllAgentChat({
           );
         }
       } finally {
-        if (!cancelled) setHydrated(true);
+        if (!cancelled) {
+          setAgentQuotaExhausted(
+            isBotQuotaExhausted(botQuotaScope(isPilotRoom))
+          );
+          setHydrated(true);
+        }
       }
     };
 
@@ -662,7 +694,7 @@ export function OllAgentChat({
       const starterPool = isPilotRoom
         ? ollBotQuestions.pilotStarters
         : ollBotQuestions.starters;
-      const unused = starterPool.filter((s) => {
+      let unused = starterPool.filter((s) => {
         const label = s.label.trim().toLowerCase();
         const message = s.message.trim().toLowerCase();
         // Keep Self assess visible on pilot so executives can switch off the landing nominate form.
@@ -671,15 +703,66 @@ export function OllAgentChat({
         }
         return !asked.has(label) && !asked.has(message);
       });
+      if (agentQuotaExhausted) {
+        const allowed = isPilotRoom
+          ? PILOT_NON_AGENT_STARTER_MESSAGES
+          : HOME_NON_AGENT_STARTER_MESSAGES;
+        unused = unused.filter((s) =>
+          allowed.has(s.message.trim().toLowerCase())
+        );
+      }
       // Show up to 3 fresh suggestions so the thread stays focused.
       return unused.slice(0, 3);
     }
     return [];
-  }, [flowDone, currentFlow, isPilotRoom, messages]);
+  }, [agentQuotaExhausted, flowDone, currentFlow, isPilotRoom, messages]);
 
   const appendMessage = useCallback((msg: Omit<ChatMessage, 'id'> & { id?: string }) => {
     setMessages((prev) => [...prev, { id: msg.id || newId(), ...msg }]);
   }, []);
+
+  const quotaScope = botQuotaScope(isPilotRoom);
+  const quotaLimitMessage = BOT_LIMIT_MESSAGES[quotaScope];
+
+  const appendAgentQuotaMessage = useCallback(
+    (text: string = quotaLimitMessage) => {
+      setMessages((prev) => {
+        if (prev.some((msg) => msg.text === text)) return prev;
+        return [
+          ...prev,
+          { id: newId(), role: 'assistant' as const, text },
+        ];
+      });
+    },
+    [quotaLimitMessage]
+  );
+
+  const tryBeginAgentTurn = useCallback((): boolean => {
+    if (agentQuotaExhausted || isBotQuotaExhausted(quotaScope)) {
+      setAgentQuotaExhausted(true);
+      appendAgentQuotaMessage();
+      return false;
+    }
+    incrementBotTurnCount(quotaScope);
+    if (getBotRemainingTurns(quotaScope) <= 0) {
+      setAgentQuotaExhausted(true);
+    }
+    return true;
+  }, [agentQuotaExhausted, appendAgentQuotaMessage, quotaScope]);
+
+  const handleAgentQuotaError = useCallback(
+    (err: unknown) => {
+      if (!(err instanceof ChatQuotaExceededError)) return false;
+      const message = err.message || quotaLimitMessage;
+      if (isDailyQuotaMessage(message)) {
+        markBotQuotaExhausted(quotaScope);
+        setAgentQuotaExhausted(true);
+      }
+      appendAgentQuotaMessage(message);
+      return true;
+    },
+    [appendAgentQuotaMessage, quotaLimitMessage, quotaScope]
+  );
 
   const appendBotForm = useCallback(
     (userText: string, assistant: Omit<ChatMessage, 'id' | 'role'>) => {
@@ -733,6 +816,7 @@ export function OllAgentChat({
   const sendToAgent = useCallback(
     async (text: string) => {
       if (!text.trim() || busy || !sessionId) return;
+      if (!tryBeginAgentTurn()) return;
 
       const trimmed = text.trim();
       appendMessage({ role: 'user', text: trimmed });
@@ -799,11 +883,13 @@ export function OllAgentChat({
           ].slice(-40)
         );
       } catch (err) {
-        appendMessage({
-          role: 'system',
-          text: err instanceof Error ? err.message : 'Something went wrong',
-          status: 'error',
-        });
+        if (!handleAgentQuotaError(err)) {
+          appendMessage({
+            role: 'system',
+            text: err instanceof Error ? err.message : 'Something went wrong',
+            status: 'error',
+          });
+        }
       } finally {
         abortRef.current = null;
         setStreamingText('');
@@ -811,12 +897,20 @@ export function OllAgentChat({
         setBusy(false);
       }
     },
-    [agentHistory, appendMessage, busy, sessionId]
+    [
+      agentHistory,
+      appendMessage,
+      busy,
+      handleAgentQuotaError,
+      sessionId,
+      tryBeginAgentTurn,
+    ]
   );
 
   const handleJobRoleSubmit = useCallback(
     async (payload: JobRoleSubmitPayload) => {
       if (busy || !sessionId) return;
+      if (!tryBeginAgentTurn()) return;
 
       const userText = `${payload.job_role} in ${payload.industry}`;
       const agentPrompt = `Show assessments I can take to diagnose myself as a ${payload.job_role} in ${payload.industry}.`;
@@ -904,11 +998,13 @@ export function OllAgentChat({
           ].slice(-40)
         );
       } catch (err) {
-        appendMessage({
-          role: 'system',
-          text: err instanceof Error ? err.message : 'Something went wrong',
-          status: 'error',
-        });
+        if (!handleAgentQuotaError(err)) {
+          appendMessage({
+            role: 'system',
+            text: err instanceof Error ? err.message : 'Something went wrong',
+            status: 'error',
+          });
+        }
       } finally {
         abortRef.current = null;
         setStreamingText('');
@@ -916,7 +1012,14 @@ export function OllAgentChat({
         setBusy(false);
       }
     },
-    [agentHistory, appendMessage, busy, sessionId]
+    [
+      agentHistory,
+      appendMessage,
+      busy,
+      handleAgentQuotaError,
+      sessionId,
+      tryBeginAgentTurn,
+    ]
   );
 
   const handleDiagnoseFromRole = useCallback(
@@ -995,9 +1098,11 @@ export function OllAgentChat({
     [appendMessage, busy, flowDone, flowStep]
   );
 
+  const agentInputLocked = flowDone && agentQuotaExhausted;
+
   const submitChatInput = () => {
     const value = input.trim();
-    if (!value || busy) return;
+    if (!value || busy || agentInputLocked) return;
     setInput('');
     if (!flowDone) {
       handleFlowReply(value);
@@ -1085,6 +1190,21 @@ export function OllAgentChat({
           },
         ],
       });
+      return;
+    }
+
+    const pinnedFaq = getPinnedFaqAnswer(message);
+    if (pinnedFaq) {
+      setMessages((prev) => [
+        ...prev,
+        { id: newId(), role: 'user', text: message.trim() },
+        { id: newId(), role: 'assistant', text: pinnedFaq },
+      ]);
+      return;
+    }
+
+    if (agentQuotaExhausted) {
+      appendAgentQuotaMessage();
       return;
     }
 
@@ -1337,8 +1457,12 @@ export function OllAgentChat({
                     submitChatInput();
                   }
                 }}
-                disabled={busy}
-                placeholder="Type your message..."
+                disabled={busy || agentInputLocked}
+                placeholder={
+                  agentInputLocked
+                    ? 'Daily chat limit reached'
+                    : 'Type your message...'
+                }
                 className="min-w-0 flex-1 border-0 bg-transparent py-2 text-sm text-gray-900 outline-none placeholder:text-gray-400 disabled:opacity-60"
                 autoComplete="off"
                 aria-label="Chat message"
@@ -1346,7 +1470,7 @@ export function OllAgentChat({
               <button
                 type="button"
                 onClick={submitChatInput}
-                disabled={busy || !input.trim()}
+                disabled={busy || agentInputLocked || !input.trim()}
                 className="oll-chat-send"
                 aria-label="Send"
               >

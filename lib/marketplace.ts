@@ -40,7 +40,11 @@ type RawMarketplaceItem = {
   sub_industry?: string;
   content_type?: string;
   banner_image?: string;
-  images?: { featured_image?: string };
+  images?: {
+    featured_image?: string;
+    square_image?: string;
+    portrait_image?: string;
+  };
   author?: Array<{ name?: string }> | { name?: string } | string;
   created_at?: string;
   created_by_name?: string;
@@ -90,11 +94,17 @@ function truncate(text: string, max = 220): string {
 }
 
 function bannerUrl(item: RawMarketplaceItem): string | undefined {
-  const img =
-    item.banner_image?.trim() ||
-    item.images?.featured_image?.trim() ||
-    "";
-  return img || undefined;
+  const candidates = [
+    item.banner_image,
+    item.images?.featured_image,
+    item.images?.square_image,
+    item.images?.portrait_image,
+  ];
+  for (const raw of candidates) {
+    const url = raw?.trim();
+    if (url) return url;
+  }
+  return undefined;
 }
 
 function researchArticleUrl(item: RawMarketplaceItem): string {

@@ -58,9 +58,11 @@ CRITICAL TOOL RULES:
 - Never mention BIFROST_URL, TAVILY_API_KEY, Console, server_tool_use, or search infrastructure.
 - Prefer concrete facts from the excerpts when they answer the question.
 
-If neither excerpts nor the knowledge database support an answer, say you do not have
-approved information and offer to connect them with the OLL team.
-Do not invent OLL products, clients, or outcomes.
+If neither excerpts nor the knowledge database support a specific claim, do NOT guess.
+Say clearly that you do not have approved information on that point, then offer to connect
+them with the OLL team or browse the OLL Academy marketplace.
+Do not invent OLL products, features, clients, prices, timelines, or outcomes.
+When uncertain, refuse rather than speculate.
 
 [OLL UI CATALOG — when inviting a next step]
 You may append at most one fenced block using language tag oll-ui with JSON only.
@@ -88,6 +90,7 @@ export function buildKnowledgeOnlyRetryMessage(
 A previous attempt tried web search and failed. That path is disabled for OLL.
 Do not call any tools. Do not mention Tavily, Bifrost, API keys, or web search.
 Answer using ONLY the approved excerpts and/or knowledge database.
+If sources do not support a claim, say you do not have approved information—do not guess or invent.
 
 ${sourceBlock(options.sourceContext)}
 
