@@ -7,7 +7,9 @@ export const siteConfig = {
   name: "The Organization Learning Labs",
   shortName: "OLL",
   legalName: "The Organization Learning Labs LLP",
-  url: process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000",
+  url: process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://theorganizationlearninglabs.com",
+  /** Only this host may be indexed; any other host (Railway, previews, localhost) is kept out of search. */
+  productionHost: "theorganizationlearninglabs.com",
   locale: "en_IN",
   phone: "+91 76766 46518",
   email: {
@@ -23,7 +25,8 @@ export const siteConfig = {
     signin: "https://platform.ollacademy.com/",
   },
   research: "https://research.ollacademy.com/research?type=internal",
-  defaultOgImage: "/og-default.svg",
+  defaultOgImage: "/opengraph-image",
+  logo: "/icon",
 } as const;
 
 export type SitePage = {
@@ -36,7 +39,7 @@ export type SitePage = {
 export const pages: Record<string, SitePage> = {
   home: {
     path: "/",
-    title: "OLL | Capability readiness for technology and BFSI enterprises",
+    title: "OLL | Capability readiness for technology and retail banking enterprises",
     description:
       "AI broke the business model in IT services and the risk model in banking. OLL assesses whether your organization has the capabilities to make the shift.",
     absoluteTitle: true,

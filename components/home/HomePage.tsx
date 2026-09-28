@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Keyb
 import type { HomeContent } from "@/lib/content";
 import type { CardItem, CaseStudy, FaqPart, IndustryKey } from "@/data/home";
 import { ecraIntro, ecraLevels, journey } from "@/data/ecra";
+import { AssessSheet } from "@/components/AssessSheet";
 import { ImageStream } from "@/components/ecra/ImageStream";
 import { LevelIcon } from "@/components/ecra/LevelIcon";
 import { SplitWords } from "@/components/story/SplitWords";
@@ -29,7 +30,7 @@ function Arrow() {
 
 const STORY_TABS: Record<IndustryKey, { n: string; title: string; sub: string }> = {
   it: { n: "01", title: "IT Services and Consulting", sub: "AI broke the business model" },
-  bfsi: { n: "02", title: "Banking, financial services and insurance", sub: "AI broke the risk model" },
+  bfsi: { n: "02", title: "Retail Banking", sub: "AI broke the risk model" },
 };
 
 function Seg({ industry, onSelect }: { industry: IndustryKey; onSelect: (k: IndustryKey) => void }) {
@@ -40,7 +41,7 @@ function Seg({ industry, onSelect }: { industry: IndustryKey; onSelect: (k: Indu
         IT Services
       </button>
       <button data-ind="bfsi" aria-pressed={industry === "bfsi"} onClick={() => onSelect("bfsi")}>
-        BFSI
+        Retail Banking
       </button>
     </div>
   );
@@ -242,6 +243,8 @@ export default function HomePage({
   const [industry, setIndustryState] = useState<IndustryKey>(initialIndustry);
   const [heroLoaded, setHeroLoaded] = useState<Record<IndustryKey, boolean>>({ it: false, bfsi: false });
   const [stickyShow, setStickyShow] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const closeSheet = useCallback(() => setSheetOpen(false), []);
 
   const [caseIdx, setCaseIdx] = useState(0);
   const [casePaused, setCasePaused] = useState(false);
@@ -768,8 +771,17 @@ export default function HomePage({
       </main>
 
       <div className={`sticky-cta${stickyShow ? " show" : ""}`} id="sticky">
-        <a className="btn btn-primary" href="https://platform.ollacademy.com/signup">Assess your readiness</a>
+        <button
+          type="button"
+          className="btn btn-primary"
+          aria-haspopup="dialog"
+          aria-expanded={sheetOpen}
+          onClick={() => setSheetOpen(true)}
+        >
+          Assess your readiness
+        </button>
       </div>
+      <AssessSheet open={sheetOpen} onClose={closeSheet} />
     </>
   );
 }

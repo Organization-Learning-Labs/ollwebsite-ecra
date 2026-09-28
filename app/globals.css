@@ -2031,6 +2031,8 @@ body.nav-open{overflow:hidden;}
 
 @media (max-width:1100px){
   .nav-toggle{display:inline-flex;}
+}
+@media (max-width:640px){
   .nav-cta .btn-primary#signup-btn{display:none;}
 }
 
@@ -2565,4 +2567,42 @@ svg.hero-shape{fill:none;stroke-linecap:round;stroke-linejoin:round;overflow:vis
   .res-track{grid-auto-columns:86%;gap:16px;align-items:start;}
   .res-arrow{width:42px;height:42px;}
   .res-ctrl .btn{width:100%;}
+}
+
+/* Assess your readiness: shared option list, phone menu group and bottom sheet */
+.mobile-nav.open{max-height:calc(100dvh - 72px);overflow-y:auto;overscroll-behavior:contain;}
+.assess-opts{display:flex;flex-direction:column;gap:2px;}
+.assess-opts a{display:flex;gap:12px;align-items:flex-start;padding:11px 12px;border-radius:var(--radius-sm);text-decoration:none;color:var(--ink);transition:background .15s;}
+.assess-opts a:hover,.assess-opts a:focus-visible{background:var(--blue-soft);}
+.assess-opts a .lv-icon{width:36px;height:36px;border-radius:10px;}
+.assess-opts a .lv-icon svg{width:20px;height:20px;}
+.assess-opts a:hover .lv-icon{transform:rotate(-8deg) scale(1.08);background:var(--surface);}
+.assess-opts .signup-copy strong{display:block;font-size:15px;font-weight:800;color:var(--ink);}
+.assess-opts .signup-copy span{display:block;font-size:13px;font-weight:500;color:var(--mute);margin-top:2px;line-height:1.35;}
+
+.mobile-nav-links .assess-opts--compact{margin-top:6px;gap:0;}
+.mobile-nav-links .assess-opts--compact a{display:flex;align-items:center;padding:10px 0;border-radius:0;border-bottom:1px solid var(--line);font-size:inherit;}
+.mobile-nav-links .assess-opts--compact a:last-of-type{border-bottom:0;}
+.mobile-nav-links .assess-opts--compact a:hover{background:none;}
+.mobile-nav-links .assess-opts--compact .lv-icon{width:32px;height:32px;border-radius:9px;}
+.mobile-nav-links .assess-opts--compact .lv-icon svg{width:18px;height:18px;}
+.mobile-nav-links .assess-opts--compact .signup-copy strong{font-size:15px;}
+.mobile-nav-links .assess-opts--compact .signup-copy span{font-size:12.5px;margin-top:1px;}
+
+.assess-sheet{position:fixed;inset:0;z-index:120;visibility:hidden;pointer-events:none;transition:visibility 0s linear .4s;}
+.assess-sheet.open{visibility:visible;pointer-events:auto;transition:none;}
+.assess-sheet-backdrop{position:absolute;inset:0;border:0;padding:0;background:rgba(11,27,51,.45);opacity:0;cursor:pointer;transition:opacity .3s var(--ease-out);}
+.assess-sheet.open .assess-sheet-backdrop{opacity:1;}
+.assess-sheet-panel{position:absolute;left:0;right:0;bottom:0;max-height:85vh;max-height:85dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--surface);border-radius:22px 22px 0 0;box-shadow:0 -24px 60px -30px rgba(11,27,51,.55);padding:10px 16px calc(18px + env(safe-area-inset-bottom,0px));transform:translateY(105%);transition:transform .4s var(--ease-out);}
+.assess-sheet.open .assess-sheet-panel{transform:none;transition:transform .5s var(--ease-spring);}
+.assess-sheet-grip{display:block;width:40px;height:4px;margin:0 auto 10px;border-radius:4px;background:var(--line-strong);}
+.assess-sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 4px 10px 12px;border-bottom:1px solid var(--line);margin-bottom:8px;}
+.assess-sheet-head p{margin:0;font-size:12px;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.06em;}
+.assess-sheet-close{display:inline-grid;place-items:center;flex:none;width:40px;height:40px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--ink);cursor:pointer;transition:transform .3s var(--ease-spring),background .15s;}
+.assess-sheet-close:hover{background:var(--blue-soft);transform:rotate(90deg);}
+.assess-sheet-close svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;}
+.assess-sheet .assess-opts a{padding:13px 12px;}
+body.sheet-open{overflow:hidden;}
+@media (prefers-reduced-motion:reduce){
+  .assess-sheet,.assess-sheet-backdrop,.assess-sheet-panel,.assess-sheet.open .assess-sheet-panel{transition:none;}
 }

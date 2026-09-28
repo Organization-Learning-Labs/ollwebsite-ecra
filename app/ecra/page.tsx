@@ -13,7 +13,7 @@ import { StoryMotion } from "@/components/story/StoryMotion";
 import { aboutContent as c } from "@/data/about";
 import { ECRA_NAV_LABEL, ecraIntro, journey } from "@/data/ecra";
 import { photos } from "@/lib/photos";
-import { breadcrumbJsonLd, buildMetadata, webPageJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, buildMetadata, ecraServiceJsonLd, webPageJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = buildMetadata("ecra");
 
@@ -31,6 +31,7 @@ export default function EcraHubPage() {
       <JsonLd
         data={[
           webPageJsonLd("ecra"),
+          ecraServiceJsonLd(),
           breadcrumbJsonLd([
             { name: "Home", path: "/" },
             { name: ECRA_NAV_LABEL, path: "/ecra" },

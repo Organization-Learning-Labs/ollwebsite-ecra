@@ -4,8 +4,8 @@ import Logo from '@/components/Logo';
 import { OllAgentChat } from '@/components/oll-bot/OllAgentChat';
 
 export const metadata: Metadata = {
-  title: ' The Organization Learning Labs Diagnostic Pilot',
-  description: 'Nominate an employee for an diagnostic assessment.',
+  title: { absolute: 'Diagnostic Pilot | The Organization Learning Labs' },
+  description: 'Nominate an employee for a diagnostic assessment.',
   robots: { index: false, follow: false },
 };
 

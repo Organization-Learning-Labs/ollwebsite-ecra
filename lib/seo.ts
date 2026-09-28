@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { absoluteUrl, pages, siteConfig, type SitePage } from "@/lib/site";
+import { ecraLevels } from "@/data/ecra";
+import type { Faq, FaqPart } from "@/data/home";
+
+const LANG = "en-IN";
 
 type BuildOpts = {
   path?: string;
@@ -31,7 +35,7 @@ export function buildMetadata(pageKey: keyof typeof pages, opts: BuildOpts = {})
       "ECRA",
       "Development Action Plan",
       "IT services",
-      "BFSI",
+      "retail banking",
       "organizational capability",
       "workforce assessment",
       "OLL",
@@ -41,6 +45,7 @@ export function buildMetadata(pageKey: keyof typeof pages, opts: BuildOpts = {})
     metadataBase: new URL(siteConfig.url),
     alternates: {
       canonical: url,
+      languages: { [LANG]: url },
     },
     robots: opts.noIndex
       ? { index: false, follow: false }
@@ -86,23 +91,98 @@ export function buildMetadata(pageKey: keyof typeof pages, opts: BuildOpts = {})
 }
 
 export function organizationJsonLd() {
+  const sameAs = Object.values(siteConfig.social as Record<string, string | undefined>).filter(Boolean);
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
+    "@id": `${siteConfig.url}/#organization`,
     name: siteConfig.name,
+    alternateName: siteConfig.shortName,
     legalName: siteConfig.legalName,
     url: siteConfig.url,
-    logo: absoluteUrl("/og-default.svg"),
+    logo: {
+      "@type": "ImageObject",
+      url: absoluteUrl(siteConfig.logo),
+      width: 512,
+      height: 512,
+    },
+    image: absoluteUrl(siteConfig.defaultOgImage),
+    description:
+      "The Organization Learning Labs researches structural change in industries and builds future capability models, competence blueprints and the Enterprise Capability Readiness Assessment (ECRA) for IT services and retail banking enterprises.",
+    email: siteConfig.email.contact,
     telephone: siteConfig.phone,
+    address: { "@type": "PostalAddress", addressRegion: "Karnataka", addressCountry: "IN" },
+    areaServed: ["IN", "Worldwide"],
+    knowsAbout: [
+      "Enterprise capability readiness",
+      "Organizational capability assessment",
+      "Competence blueprints",
+      "Workforce readiness",
+      "IT services and consulting",
+      "Retail banking",
+      "AI-driven business transformation",
+    ],
+    ...(sameAs.length ? { sameAs } : {}),
     contactPoint: [
       {
         "@type": "ContactPoint",
         telephone: siteConfig.phone,
+        email: siteConfig.email.contact,
         contactType: "customer service",
         areaServed: "IN",
         availableLanguage: ["English"],
       },
     ],
+  };
+}
+
+function faqPartText(part: FaqPart): string {
+  if ("p" in part) return part.p;
+  if ("ul" in part) return part.ul.join("; ");
+  if ("ol" in part) return part.ol.map((item, i) => `${i + 1}. ${item}`).join(" ");
+  const [a, b] = part.table.head;
+  return part.table.rows.map(([x, y]) => `${a}: ${x} ${b}: ${y}`).join(" ");
+}
+
+export function faqPageJsonLd(faqs: Faq[], path = "/") {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    url: absoluteUrl(path),
+    inLanguage: LANG,
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.parts.map(faqPartText).join(" ") },
+    })),
+  };
+}
+
+export function ecraServiceJsonLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": `${absoluteUrl("/ecra")}#service`,
+    name: "Enterprise Capability Readiness Assessment (ECRA)",
+    serviceType: "Organizational capability readiness assessment",
+    description: pages.ecra.description,
+    url: absoluteUrl("/ecra"),
+    provider: { "@id": `${siteConfig.url}/#organization` },
+    areaServed: ["IN", "Worldwide"],
+    audience: { "@type": "BusinessAudience", audienceType: "IT services and retail banking enterprises" },
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: "ECRA assessment levels",
+      itemListElement: ecraLevels.map((l) => ({
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: `${l.title} readiness assessment`,
+          description: l.summary,
+          url: absoluteUrl(l.href),
+        },
+      })),
+    },
   };
 }
 
@@ -117,7 +197,7 @@ export function websiteJsonLd() {
       "@type": "Organization",
       name: siteConfig.name,
     },
-    inLanguage: "en",
+    inLanguage: LANG,
   };
 }
 
@@ -137,7 +217,7 @@ export function webPageJsonLd(pageKey: keyof typeof pages, opts: BuildOpts = {})
       name: siteConfig.name,
       url: siteConfig.url,
     },
-    inLanguage: "en",
+    inLanguage: LANG,
   };
 }
 

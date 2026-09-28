@@ -6,12 +6,11 @@ import { type CSSProperties, useEffect, useRef, useState } from "react";
 import Logo from "@/components/Logo";
 import { aboutContent } from "@/data/about";
 import { aboutSections } from "@/data/about-sections";
-import { ECRA_NAV_LABEL, assessmentSignups, ecraLevels } from "@/data/ecra";
+import { AssessOptions } from "@/components/AssessOptions";
+import { ECRA_NAV_LABEL, ecraLevels } from "@/data/ecra";
 import { RESEARCH } from "@/data/home";
 import { LevelIcon } from "@/components/ecra/LevelIcon";
 import { siteConfig } from "@/lib/site";
-
-const SIGNUP_URL = siteConfig.platform.signup;
 
 function useMenu() {
   const [open, setOpen] = useState(false);
@@ -117,6 +116,15 @@ export default function Header() {
   }, [mobileOpen]);
 
   const closeMobile = () => setMobileOpen(false);
+
+  const signupOpen = signup.open;
+  const setSignupOpen = signup.setOpen;
+  useEffect(() => {
+    if (signupOpen) setMobileOpen(false);
+  }, [signupOpen]);
+  useEffect(() => {
+    if (mobileOpen) setSignupOpen(false);
+  }, [mobileOpen, setSignupOpen]);
 
   return (
     <header className="nav">
@@ -291,15 +299,7 @@ export default function Header() {
               aria-labelledby="signup-btn"
             >
               <p className="signup-head">Start at the level you decide at</p>
-              {assessmentSignups.map((a) => (
-                <a key={a.slug} role="menuitem" href={SIGNUP_URL} data-level={a.slug}>
-                  <LevelIcon slug={a.slug} />
-                  <span className="signup-copy">
-                    <strong>{a.title}</strong>
-                    <span>{a.line}</span>
-                  </span>
-                </a>
-              ))}
+              <AssessOptions asMenu onPick={() => signup.setOpen(false)} />
               <div className="signup-foot">
                 <span className="flag">Four signup URLs to be supplied</span>
               </div>
@@ -361,9 +361,8 @@ export default function Header() {
               {item.label}
             </Link>
           ))}
-          <a className="btn btn-primary mobile-nav-cta" href={SIGNUP_URL} onClick={closeMobile}>
-            Assess your readiness
-          </a>
+          <p className="mobile-nav-group">Assess your readiness</p>
+          <AssessOptions className="assess-opts assess-opts--compact" onPick={closeMobile} />
         </nav>
       </div>
       {mobileOpen ? (

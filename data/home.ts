@@ -86,8 +86,8 @@ export const IND: Record<IndustryKey, Industry> = {
     ],
   },
   bfsi: {
-    short: "BFSI",
-    name: "BFSI",
+    short: "retail banking",
+    name: "Retail Banking",
     hero: {
       h1: "The future of banking depends on more than digital technology. It depends on what your people and organization can do with it.",
       intro:

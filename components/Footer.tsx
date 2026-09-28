@@ -40,8 +40,8 @@ export default function Footer() {
           <div>
             <h4>Industries in focus</h4>
             <ul>
-              <li><Link href="/?industry=it">Information technology</Link></li>
-              <li><Link href="/?industry=bfsi">Banking and insurance</Link></li>
+              <li><Link href="/?industry=it">IT Services and Consulting</Link></li>
+              <li><Link href="/?industry=bfsi">Retail Banking</Link></li>
             </ul>
           </div>
           <div>

@@ -27,11 +27,9 @@ const newsreader = Newsreader({
 export const metadata: Metadata = {
   ...buildMetadata("home"),
   metadataBase: new URL(siteConfig.url),
-  icons: {
-    icon: [{ url: "/favicon.png", type: "image/png" }],
-    shortcut: "/favicon.png",
-    apple: [{ url: "/favicon.png", type: "image/png" }],
-  },
+  ...(process.env.NEXT_PUBLIC_GSC_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION } }
+    : {}),
   other: {
     "geo.region": "IN-KA",
   },
@@ -47,7 +45,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${satoshi.variable} ${newsreader.variable}`} suppressHydrationWarning>
+    <html lang="en-IN" className={`${satoshi.variable} ${newsreader.variable}`} suppressHydrationWarning>
       <head>
         {/* Scroll-reveal hidden states only apply once JS is known to run; if the
             observer never mounts, `reveal-all` shows everything as a safety net. */}
