@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-/** Legacy outreach emails used `/?campaign=&exec=` — forward to `/pilot`. */
+/** Legacy outreach emails used `/?campaign=&exec=` - forward to `/pilot`. */
 export function PilotOutreachRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();

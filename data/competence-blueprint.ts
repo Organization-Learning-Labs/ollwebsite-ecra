@@ -1,4 +1,4 @@
-/** Competence Blueprint page content — sourced from OLL Competence Blueprint PDF. */
+/** Competence Blueprint page content - sourced from OLL Competence Blueprint PDF. */
 
 export type LabeledItem = { title: string; body: string };
 export type ChainStep = { title: string; body: string };
@@ -15,6 +15,20 @@ export const competenceBlueprintContent = {
       "OLL conducts research with industry experts, practitioners and academicians to examine emerging organizational patterns, operating models, technology shifts, workforce requirements and leadership challenges. These insights inform the design of future organization archetypes and the capabilities required to support them.",
       "The strategic question is not simply whether an organization has skilled people or modern technology. It is whether the organization can consistently convert strategy, people, processes, technology, governance and resources into the capabilities required to remain relevant and effective.",
     ],
+    shortIntro: [
+      {
+        title: "Before transformation starts",
+        body: "Reinvention begins by understanding how the environment, industries and business models are changing, and what the organization must become capable of next.",
+      },
+      {
+        title: "Research-shaped archetypes",
+        body: "Research with experts, practitioners and academicians on operating models, technology, workforce and leadership shapes future organization archetypes and their capabilities.",
+      },
+      {
+        title: "The strategic question",
+        body: "Not whether you have skilled people or modern technology, but whether you can consistently turn strategy, people, processes, technology, governance and resources into the capabilities you need.",
+      },
+    ] satisfies LabeledItem[],
     pullQuote:
       "The OLL Competence Blueprint connects external change to organizational capability, role-based competence and transformation action.",
   },
@@ -27,6 +41,20 @@ export const competenceBlueprintContent = {
       "Its strategic significance is that it creates a common language between enterprise strategy and workforce execution. It moves organizations beyond disconnected skill inventories and isolated training toward a structured understanding of what the organization must be capable of doing, which functions and roles enable that capability, and what must change to support the desired future state.",
       "The blueprint provides a reference foundation for readiness assessment, transformation design, capability development, leadership development and the embedding of new organizational practices.",
     ],
+    shortParagraphs: [
+      {
+        title: "A connected architecture",
+        body: "Future requirements become capability families, capabilities, competence categories, competence clusters and role-specific competencies.",
+      },
+      {
+        title: "A common language",
+        body: "Strategy and workforce execution share one view of what the organization must do, which roles enable it and what must change, replacing disconnected skill inventories and isolated training.",
+      },
+      {
+        title: "A reference foundation",
+        body: "For readiness assessment, transformation design, capability and leadership development, and embedding new organizational practices.",
+      },
+    ] satisfies LabeledItem[],
     pullQuote:
       "The Competence Blueprint is not merely a catalogue of competencies. It is the bridge between the future organization an enterprise intends to become and the capabilities and competencies required to make that future possible.",
   },
@@ -36,6 +64,8 @@ export const competenceBlueprintContent = {
     h2: "Connecting enterprise requirements with function and role execution.",
     lede:
       "The architecture connects enterprise-level requirements with function-level and role-level execution. Each layer adds context and precision while preserving the relationship between organizational outcomes and individual contribution.",
+    shortLede:
+      "From enterprise requirements down to role execution. Each layer adds precision while keeping outcomes tied to individual contribution.",
     layers: [
       {
         title: "Capability Family",
@@ -114,6 +144,9 @@ export const competenceBlueprintContent = {
     h2: "Connecting strategic intent with where decisions and development occur.",
     lede:
       "The blueprint operates across four levels because enterprise reinvention must connect strategic intent with the levels where decisions, work and capability development occur.",
+    shortLede: "Reinvention must reach the levels where decisions, work and development actually happen.",
+    shortClosing:
+      "Use the levels independently or as a cascade: translate enterprise transformation down to business-unit, function and role requirements, or trace a focused role initiative up to its wider organizational implications.",
     items: [
       {
         title: "Enterprise",
@@ -138,9 +171,10 @@ export const competenceBlueprintContent = {
 
   pathways: {
     label: "Two pathways to apply the blueprint",
-    h2: "Broad transformation or focused intervention—same connected architecture.",
+    h2: "Broad transformation or focused intervention: same connected architecture.",
     lede:
       "The blueprint supports both broad enterprise transformation and focused capability or role-based interventions. The starting point may differ, but the architecture remains connected.",
+    shortLede: "Start with broad enterprise transformation or a focused capability or role. Either way, the architecture stays connected.",
     pathwayAHeading: "Pathway A: Organization Transformation",
     pathwayA: [
       {
@@ -171,6 +205,23 @@ export const competenceBlueprintContent = {
     pathwayBHeading: "Pathway B: Focused Capability or Role Transformation",
     pathwayB:
       "An organization may select a specific capability area, function, job role or leadership level. The blueprint can define the relevant requirements, identify competence clusters, assess readiness and design a focused development or transformation program.",
+    /** Pathway B broken out for the pathways infographic (same wording as pathwayB). */
+    pathwayBEntries: ["Capability area", "Function", "Job role", "Leadership level"],
+    pathwayBSteps: [
+      "Define the relevant requirements",
+      "Identify competence clusters",
+      "Assess readiness",
+      "Design a focused development or transformation program",
+    ],
+    /** The connected architecture named in the pull quote. */
+    chain: [
+      "Future requirement",
+      "Capability",
+      "Competence",
+      "Role",
+      "Development",
+      "Application and embedding",
+    ],
     pullQuote:
       "The entry point may differ. The architecture remains connected: future requirement → capability → competence → role → development → application and embedding.",
   },
@@ -180,6 +231,9 @@ export const competenceBlueprintContent = {
     h2: "Strategic context for selecting target capabilities.",
     lede:
       "Comparing the current and desired organization archetypes provides the strategic context for selecting target capabilities. It prevents capability development from becoming an abstract exercise disconnected from business direction.",
+    shortLede: "Comparing today's archetype with the desired one keeps capability development anchored in business direction.",
+    shortComparison:
+      "It shows which capabilities exist, which need strengthening or redesign, what is new, which roles and leadership levels are affected, and which enablers help or constrain the transition.",
     currentTitle: "Current organization archetype",
     currentBody:
       "How the organization currently creates value, operates, makes decisions, organizes work, deploys technology, develops people and governs execution.",
@@ -189,7 +243,7 @@ export const competenceBlueprintContent = {
     comparison:
       "The comparison helps explore which capabilities exist, which require strengthening or redesign, what new capabilities may be needed, which roles and leadership levels are affected, and which enablers may support or constrain the transition.",
     note:
-      "The desired archetype is a contextual design objective—not a universal model—and must reflect the organization's industry, business model, geography, maturity and strategic ambition.",
+      "The desired archetype is a contextual design objective, not a universal model, and must reflect the organization's industry, business model, geography, maturity and strategic ambition.",
   },
 
   toCompetencies: {
@@ -197,6 +251,7 @@ export const competenceBlueprintContent = {
     h2: "Where strategic intent becomes actionable for development.",
     lede:
       "Once target capabilities are identified, they can be translated into competence requirements at function, role and leadership levels. This is where strategic intent becomes actionable for organizational development.",
+    shortLede: "Target capabilities become competence requirements at function, role and leadership levels.",
     exampleTitle: "Illustrative example: AI-Augmented Software Engineering",
     exampleRows: [
       {
@@ -233,6 +288,7 @@ export const competenceBlueprintContent = {
     h2: "Supporting decisions about what must change.",
     lede:
       "The strategic purpose of the blueprint is not only to describe requirements. It supports decisions about what must change and how the organization can develop and embed the required future state.",
+    shortLede: "The blueprint does not just describe requirements. It guides what must change and how to develop and embed the future state.",
     stages: [
       {
         title: "Diagnose",
@@ -256,9 +312,9 @@ export const competenceBlueprintContent = {
       },
     ] satisfies ChainStep[],
     note:
-      "Transformation may require governance, process redesign, technology enablement, leadership alignment, role redesign, performance measures, collaboration mechanisms and organizational change—not training alone.",
+      "Transformation may require governance, process redesign, technology enablement, leadership alignment, role redesign, performance measures, collaboration mechanisms and organizational change, not training alone.",
     pullQuote:
-      "Capability is embedded when the new way of working becomes part of how the organization makes decisions, performs work and delivers outcomes—not merely when people complete learning activities.",
+      "Capability is embedded when the new way of working becomes part of how the organization makes decisions, performs work and delivers outcomes, not merely when people complete learning activities.",
   },
 
   ecra: {
@@ -268,6 +324,9 @@ export const competenceBlueprintContent = {
       "The Enterprise Capability Readiness Assessment (ECRA) uses the Competence Blueprint as a reference architecture for exploring readiness against defined future requirements.",
     body:
       "ECRA can be applied at the enterprise, business unit or organization, function area or capability, and leader or role level. Its focus may originate from a current-versus-future archetype comparison, a specific capability, a function, a job role or a leadership level.",
+    shortLede: "ECRA uses the Competence Blueprint as its reference architecture for exploring readiness against defined future requirements.",
+    shortBody:
+      "Apply it at enterprise, business unit, function or role level, starting from an archetype comparison, a capability, a function, a job role or a leadership level.",
     trio: [
       {
         title: "Competence Blueprint",
@@ -288,9 +347,12 @@ export const competenceBlueprintContent = {
 
   foundation: {
     label: "Foundation for enterprise reinvention",
-    h2: "A living architecture—not a static catalogue.",
+    h2: "A living architecture, not a static catalogue.",
     lede:
       "Enterprise reinvention requires a continuous connection between external intelligence, strategic choices, organizational design, capability development and embedded execution. The Competence Blueprint provides the connective architecture for that system.",
+    shortLede:
+      "Reinvention needs a continuous link from external intelligence to strategy, design, capability development and embedded execution. The blueprint is that connective architecture.",
+    shortLiving: "It evolves as research develops, industries change, priorities shift and new evidence emerges.",
     pipeline: [
       "Research",
       "Organization Archetypes",

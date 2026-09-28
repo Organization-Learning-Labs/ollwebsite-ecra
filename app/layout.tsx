@@ -50,7 +50,17 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${satoshi.variable} ${newsreader.variable}`}>
+    <html lang="en" className={`${satoshi.variable} ${newsreader.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Scroll-reveal hidden states only apply once JS is known to run; if the
+            observer never mounts, `reveal-all` shows everything as a safety net. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(d){d.classList.add('js');addEventListener('load',function(){setTimeout(function(){if(!d.classList.contains('motion-on'))d.classList.add('reveal-all')},3000)})})(document.documentElement)",
+          }}
+        />
+      </head>
       {/* Extensions such as Grammarly add attributes to body before hydration. */}
       <body suppressHydrationWarning>
         <OllieBotProvider>

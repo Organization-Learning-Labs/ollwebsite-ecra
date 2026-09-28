@@ -78,7 +78,7 @@ export function NominationForm({
 
   const isSelfAssess = title === 'Self assess' || Boolean(lockIdentity);
 
-  // Nominate: never prefill from the nominator's session — the employee is someone else.
+  // Nominate: never prefill from the nominator's session - the employee is someone else.
   // Self assess: treat invitation/session fields as suggestions the user can override.
   const knownName = isSelfAssess
     ? nominee_name?.trim() || session.nominator_name?.trim() || ''
@@ -326,7 +326,7 @@ export function NominationForm({
         <>
           {isSelfAssess && (knownIndustry || knownJob) ? (
             <p className="text-[11px] text-gray-500">
-              Suggested from your invitation — change industry or job role below if needed.
+              Suggested from your invitation. Change industry or job role below if needed.
             </p>
           ) : null}
           <AutocompleteField

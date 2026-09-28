@@ -63,6 +63,11 @@ class ChatQuotaExceededError extends Error {
   }
 }
 
+/** The site avoids em-dashes; agent answers can still contain them. */
+function withoutEmDashes(text: string): string {
+  return text.replace(/\s*\u2014\s*/g, ', ');
+}
+
 function isDailyQuotaMessage(message: string): boolean {
   return (
     message.includes('chat limit for today') ||
@@ -600,7 +605,7 @@ export function OllAgentChat({
               : buildPilotLandingMessages({})
           );
         } else {
-          // Home bot skips intake — show welcome + starter chips immediately.
+          // Home bot skips intake - show welcome + starter chips immediately.
           setFlowStep(ollBotQuestions.flow.length);
           setMessages(buildInitialMessages());
         }
@@ -867,7 +872,7 @@ export function OllAgentChat({
             role: 'assistant',
             text: visibleText || (offers.length > 0 ? '' : answer),
             // Agent host often flags tool/search failures as "refused" even when we
-            // still show a normal answer — never paint successful bubbles red.
+            // still show a normal answer - never paint successful bubbles red.
             refused: false,
             status: reply.status,
             catalog: nodes.length > 0 ? nodes : undefined,
@@ -1091,7 +1096,7 @@ export function OllAgentChat({
       } else {
         appendMessage({
           role: 'assistant',
-          text: 'Thanks — ask anything about OLL, or tap a suggestion below.',
+          text: 'Thanks. Ask anything about OLL, or tap a suggestion below.',
         });
       }
     },
@@ -1129,7 +1134,7 @@ export function OllAgentChat({
 
     if (normalized === JOB_ROLE_STARTER.toLowerCase()) {
       appendBotForm(message.trim(), {
-        text: 'Tell us your industry and job role — we will match assessments you can use to diagnose yourself.',
+        text: 'Tell us your industry and job role, and we will match assessments you can use to diagnose yourself.',
         catalog: [
           {
             type: 'job_role_form',
@@ -1355,7 +1360,7 @@ export function OllAgentChat({
                     key={msg.id}
                     className="oll-msg-in px-1 text-center text-[11px] text-gray-500"
                   >
-                    {msg.text}
+                    {withoutEmDashes(msg.text)}
                   </p>
                 );
               }
@@ -1390,7 +1395,7 @@ export function OllAgentChat({
                         }`}
                       >
                         <BotMessageContent
-                          text={msg.text}
+                          text={isUser ? msg.text : withoutEmDashes(msg.text)}
                           variant={isUser ? 'user' : 'assistant'}
                         />
                       </div>
@@ -1482,7 +1487,7 @@ export function OllAgentChat({
       )}
 
       {/*
-        When hideLauncher is set, Ollie opens the chat — but once open we still show
+        When hideLauncher is set, Ollie opens the chat - but once open we still show
         the circular close FAB below the panel (same pattern as Academy).
       */}
       {!isPilotRoom && (!hideLauncher || open || panelMounted) ? (

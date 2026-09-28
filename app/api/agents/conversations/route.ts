@@ -11,7 +11,7 @@ function resolvePilotApiBase(): string | null {
   }
 }
 
-/** Best-effort conversation persistence for pilot analytics — optional in local dev. */
+/** Best-effort conversation persistence for pilot analytics - optional in local dev. */
 export async function POST(req: NextRequest) {
   const base = resolvePilotApiBase();
   if (!base) {

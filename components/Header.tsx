@@ -1,8 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
 import Logo from "@/components/Logo";
+import { aboutContent } from "@/data/about";
+import { aboutSections } from "@/data/about-sections";
+import { ECRA_NAV_LABEL, assessmentSignups, ecraLevels } from "@/data/ecra";
+import { RESEARCH } from "@/data/home";
+import { LevelIcon } from "@/components/ecra/LevelIcon";
 import { siteConfig } from "@/lib/site";
 
 const SIGNUP_URL = siteConfig.platform.signup;
@@ -47,21 +53,56 @@ function useMenu() {
 }
 
 const NAV = [
-  { href: "/#capabilities", label: "Capabilities" },
-  { href: "/#research", label: "Research" },
-  { href: "/#best-practices", label: "Best practices" },
-  { href: "/#shift", label: "Operating model" },
-  { href: "/#ecra", label: "Assessment" },
-  { href: "/competence-blueprint", label: "Blueprint", ariaLabel: "Competence Blueprint" },
-  { href: "/#dap", label: "DAP" },
-  { href: "/about", label: "About us" },
+  { href: "/competence-blueprint", label: "Competence Blueprint" },
+  { href: "/contact", label: "Contact Us" },
 ] as const;
+
+const RESEARCH_URL = siteConfig.research;
+
+const ABOUT_LINKS = aboutSections.map((s) => ({ href: s.href, label: s.title }));
+
+const RESEARCH_ICON = {
+  paper: (
+    <>
+      <path d="M7 3h7l4 4v14H7z" />
+      <path d="M14 3v4h4M10 12h5M10 16h5" />
+    </>
+  ),
+  case: (
+    <>
+      <rect x="3" y="7" width="18" height="13" rx="2" />
+      <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18" />
+    </>
+  ),
+  practice: (
+    <>
+      <path d="M9 12l2 2 4-4" />
+      <circle cx="12" cy="12" r="8.5" />
+    </>
+  ),
+};
+
+const RESEARCH_LINKS = [
+  { icon: "paper", title: "Whitepapers", line: "Sector research on the capabilities enterprises will need next." },
+  { icon: "case", title: "Case Studies", line: "What changed inside organizations that rebuilt a capability." },
+  { icon: "practice", title: "Best Practices", line: "Field-tested practice notes for leaders running the change." },
+] as const;
+
+const ABOUT_NEWS = RESEARCH.all.slice(0, 3);
 
 export default function Header() {
   const mega = useMenu();
+  const about = useMenu();
+  const assess = useMenu();
   const signup = useMenu();
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeMega = () => mega.setOpen(false);
+  const closeAbout = () => about.setOpen(false);
+  const closeAssess = () => assess.setOpen(false);
+  const pathname = usePathname();
+  const isCurrent = (href: string) => pathname === href;
+  const aboutActive = pathname.startsWith("/about");
+  const assessActive = pathname === "/ecra" || pathname.startsWith("/ecra/");
 
   useEffect(() => {
     document.body.classList.toggle("nav-open", mobileOpen);
@@ -80,12 +121,66 @@ export default function Header() {
   return (
     <header className="nav">
       <div className="wrap nav-inner">
-        <Link className="brand" href="/#top" aria-label="The Organization Learning Labs home" onClick={closeMobile}>
+        <Link className="brand" href="/" aria-label="The Organization Learning Labs home" onClick={closeMobile}>
           <Logo />
         </Link>
         <nav className="nav-links" aria-label="Primary">
-          <Link href="/#capabilities">Capabilities</Link>
-          <div className="mega-wrap" {...mega.wrapProps}>
+          <div className="mega-wrap mega-wrap--about" {...about.wrapProps}>
+            <button
+              className="mega-btn"
+              id="about-btn"
+              aria-controls="about-mega"
+              data-active={aboutActive || undefined}
+              {...about.btnProps}
+            >
+              About us
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            <div
+              className={`mega mega--about${about.open ? " open" : ""}`}
+              id="about-mega"
+              role="region"
+              aria-labelledby="about-btn"
+            >
+              <div className="mega-about">
+                <div className="mega-about-intro">
+                  <h4>About us</h4>
+                  <p>{aboutContent.hero.lede}</p>
+                  <Link className="btn btn-ghost mega-about-explore" href="/about" onClick={closeAbout}>
+                    Explore
+                  </Link>
+                </div>
+                <ul className="mega-about-links">
+                  {ABOUT_LINKS.map((l, i) => (
+                    <li key={l.href} style={{ "--i": i } as CSSProperties}>
+                      <Link href={l.href} onClick={closeAbout}>
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mega-about-news">
+                  <h5>Latest research</h5>
+                  <ul>
+                    {ABOUT_NEWS.map((n, i) => (
+                      <li key={n.u} style={{ "--i": i + ABOUT_LINKS.length } as CSSProperties}>
+                        <span className="mega-about-news-k">{n.tag}</span>
+                        <a href={n.u} target="_blank" rel="noopener" onClick={closeAbout}>
+                          {n.t}
+                        </a>
+                        <span className="mega-about-news-d">
+                          {n.on} <i aria-hidden="true" /> {n.by}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mega-wrap mega-wrap--about" {...mega.wrapProps}>
             <button className="mega-btn" id="mega-btn" aria-controls="mega" {...mega.btnProps}>
               Our Research
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -93,48 +188,88 @@ export default function Header() {
               </svg>
             </button>
             <div
-              className={`mega${mega.open ? " open" : ""}`}
+              className={`mega mega--about${mega.open ? " open" : ""}`}
               id="mega"
               role="region"
               aria-labelledby="mega-btn"
             >
-              <div className="mega-inner">
-                <a className="mega-col" href="#" onClick={closeMega}>
-                  <h4>Whitepapers</h4>
-                  <p>Sector research on the capabilities enterprises will need next.</p>
-                  <span className="mega-eg">Future of IT services delivery</span>
-                  <span className="mega-eg">Cyber readiness as a workforce capability</span>
-                  <span className="mega-link">Browse whitepapers</span>
-                </a>
-                <Link className="mega-col" href="/#research" onClick={closeMega}>
-                  <h4>Case Studies</h4>
-                  <p>What changed inside organizations that rebuilt a capability.</p>
-                  <span className="mega-eg">From billable hours to outcomes</span>
-                  <span className="mega-eg">Building cyber judgment on the front line</span>
-                  <span className="mega-link">Browse case studies</span>
-                </Link>
-                <Link className="mega-col" href="/#best-practices" onClick={closeMega}>
-                  <h4>Best Practices</h4>
-                  <p>Field-tested practice notes for leaders running the change.</p>
-                  <span className="mega-eg">Running a capability review</span>
-                  <span className="mega-eg">Nominating the right participants</span>
-                  <span className="mega-link">Browse best practices</span>
-                </Link>
-              </div>
-              <div className="mega-foot">
-                <span className="flag">Links to be supplied</span>
-                <a href={siteConfig.research} target="_blank" rel="noopener">
-                  Go to the full research library
-                </a>
+              <div className="mega-about mega-about--assess">
+                <div className="mega-about-intro">
+                  <h4>Our Research</h4>
+                  <p>
+                    Peer-reviewed studies, whitepapers, case studies and practice notes from the OLL Research Academy,
+                    on the capabilities industries will need next.
+                  </p>
+                  <a className="btn btn-ghost mega-about-explore" href={RESEARCH_URL} target="_blank" rel="noopener" onClick={closeMega}>
+                    Explore the library
+                  </a>
+                </div>
+                <ul className="mega-levels mega-levels--3">
+                  {RESEARCH_LINKS.map((r, i) => (
+                    <li key={r.title} style={{ "--i": i } as CSSProperties}>
+                      <a href={RESEARCH_URL} target="_blank" rel="noopener" onClick={closeMega}>
+                        <span className="lv-icon" aria-hidden="true">
+                          <svg viewBox="0 0 24 24">{RESEARCH_ICON[r.icon]}</svg>
+                        </span>
+                        <span>
+                          <strong>{r.title}</strong>
+                          <small>{r.line}</small>
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
-          <Link href="/#shift">Operating model</Link>
-          <Link href="/#ecra">Assessment</Link>
-          <Link href="/competence-blueprint" aria-label="Competence Blueprint">
-            Blueprint
-          </Link>
-          <Link href="/#dap">DAP</Link>
+          <div className="mega-wrap mega-wrap--about" {...assess.wrapProps}>
+            <button
+              className="mega-btn"
+              id="assess-btn"
+              aria-controls="assess-mega"
+              data-active={assessActive || undefined}
+              {...assess.btnProps}
+            >
+              {ECRA_NAV_LABEL}
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 9l6 6 6-6" />
+              </svg>
+            </button>
+            <div
+              className={`mega mega--about${assess.open ? " open" : ""}`}
+              id="assess-mega"
+              role="region"
+              aria-labelledby="assess-btn"
+            >
+              <div className="mega-about mega-about--assess">
+                <div className="mega-about-intro">
+                  <h4>{ECRA_NAV_LABEL}</h4>
+                  <p>{aboutContent.ecra.shortLede}</p>
+                  <Link className="btn btn-ghost mega-about-explore" href="/ecra" onClick={closeAssess}>
+                    Explore
+                  </Link>
+                </div>
+                <ul className="mega-levels">
+                  {ecraLevels.map((l, i) => (
+                    <li key={l.slug} style={{ "--i": i } as CSSProperties}>
+                      <Link href={l.href} onClick={closeAssess} aria-current={isCurrent(l.href) ? "page" : undefined}>
+                        <LevelIcon slug={l.slug} />
+                        <span>
+                          <strong>{l.title}</strong>
+                          <small>{l.summary}</small>
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+          {NAV.map((item) => (
+            <Link key={item.href} href={item.href} aria-current={isCurrent(item.href) ? "page" : undefined}>
+              {item.label}
+            </Link>
+          ))}
         </nav>
         <div className="nav-cta">
           <div className="signup-wrap" {...signup.wrapProps}>
@@ -156,20 +291,17 @@ export default function Header() {
               aria-labelledby="signup-btn"
             >
               <p className="signup-head">Start at the level you decide at</p>
-              <a role="menuitem" href={SIGNUP_URL} data-level="org">
-                <strong>Sign up as an organization</strong>
-                <span>Structural and governance maturity</span>
-              </a>
-              <a role="menuitem" href={SIGNUP_URL} data-level="dept">
-                <strong>Sign up as a department</strong>
-                <span>Where the capability gaps sit in a unit</span>
-              </a>
-              <a role="menuitem" href={SIGNUP_URL} data-level="ind">
-                <strong>Sign up as an individual</strong>
-                <span>Your own Development Action Plan</span>
-              </a>
+              {assessmentSignups.map((a) => (
+                <a key={a.slug} role="menuitem" href={SIGNUP_URL} data-level={a.slug}>
+                  <LevelIcon slug={a.slug} />
+                  <span className="signup-copy">
+                    <strong>{a.title}</strong>
+                    <span>{a.line}</span>
+                  </span>
+                </a>
+              ))}
               <div className="signup-foot">
-                <span className="flag">Three signup URLs to be supplied</span>
+                <span className="flag">Four signup URLs to be supplied</span>
               </div>
             </div>
           </div>
@@ -194,12 +326,37 @@ export default function Header() {
         hidden={!mobileOpen}
       >
         <nav className="mobile-nav-links" aria-label="Mobile">
+          <p className="mobile-nav-group">About us</p>
+          <Link href="/about" onClick={closeMobile} aria-current={isCurrent("/about") ? "page" : undefined}>
+            Overview
+          </Link>
+          {ABOUT_LINKS.map((l) => (
+            <Link key={l.href} href={l.href} onClick={closeMobile} aria-current={isCurrent(l.href) ? "page" : undefined}>
+              {l.label}
+            </Link>
+          ))}
+          <p className="mobile-nav-group">Our Research</p>
+          {RESEARCH_LINKS.map((r) => (
+            <a key={r.title} href={RESEARCH_URL} target="_blank" rel="noopener" onClick={closeMobile}>
+              {r.title}
+            </a>
+          ))}
+          <p className="mobile-nav-group">{ECRA_NAV_LABEL}</p>
+          <Link href="/ecra" onClick={closeMobile} aria-current={isCurrent("/ecra") ? "page" : undefined}>
+            Overview
+          </Link>
+          {ecraLevels.map((l) => (
+            <Link key={l.slug} href={l.href} onClick={closeMobile} aria-current={isCurrent(l.href) ? "page" : undefined}>
+              {l.title}
+            </Link>
+          ))}
           {NAV.map((item) => (
             <Link
               key={item.href}
+              className="mobile-nav-solo"
               href={item.href}
-              aria-label={"ariaLabel" in item ? item.ariaLabel : undefined}
               onClick={closeMobile}
+              aria-current={isCurrent(item.href) ? "page" : undefined}
             >
               {item.label}
             </Link>

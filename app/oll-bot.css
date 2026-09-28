@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /*
- * Scoped resets only — do NOT set background/border/padding/color on buttons,
+ * Scoped resets only - do NOT set background/border/padding/color on buttons,
  * or those rules beat Tailwind utilities (higher specificity).
  */
 .oll-agent-chat,
@@ -39,7 +39,7 @@
 }
 
 /*
- * Tailwind preflight is off — without this, inputs keep browser inset borders
+ * Tailwind preflight is off - without this, inputs keep browser inset borders
  * and submit buttons get outset chrome (looks broken on /pilot forms).
  */
 .oll-agent-chat .oll-form-field {
@@ -195,7 +195,7 @@
   display: block;
 }
 
-/* Site globals force img/svg height:auto — lock common icon sizes */
+/* Site globals force img/svg height:auto - lock common icon sizes */
 .oll-agent-chat .h-3 { width: 0.75rem !important; height: 0.75rem !important; }
 .oll-agent-chat .h-4 { width: 1rem !important; height: 1rem !important; }
 .oll-agent-chat .h-5 { width: 1.25rem !important; height: 1.25rem !important; }
@@ -213,7 +213,7 @@
 .oll-agent-chat .w-10 { width: 2.5rem !important; }
 .oll-agent-chat .w-14 { width: 3.5rem !important; }
 
-/* Critical chrome — survives any utility/specificity fights with site CSS */
+/* Critical chrome - survives any utility/specificity fights with site CSS */
 .oll-agent-chat .oll-chat-panel {
   display: flex;
   flex-direction: column;
@@ -225,7 +225,7 @@
 }
 
 /*
- * Site .nav is sticky z-index:100 — chat must sit above it or the navy
+ * Site .nav is sticky z-index:100 - chat must sit above it or the navy
  * header (and expand/close) get covered and look “clipped”.
  */
 .oll-agent-chat:not(.oll-agent-chat--pilot) {
@@ -455,7 +455,7 @@
   border-radius: 8px;
 }
 
-/* Assessment carousel — scoped styles beat site globals (h3, a underline, etc.) */
+/* Assessment carousel - scoped styles beat site globals (h3, a underline, etc.) */
 .oll-agent-chat .oll-offer-carousel {
   margin-left: 46px;
   display: flex;

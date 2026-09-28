@@ -18,7 +18,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   const label = IND[industry].name;
   return buildMetadata("home", {
     path: industry === "it" ? "/" : `/?industry=${industry}`,
-    title: `The Organization Learning Labs — Capability readiness for ${label}`,
+    title: `The Organization Learning Labs | Capability readiness for ${label}`,
     description:
       industry === "bfsi"
         ? "Digital channels and AI-enabled threats changed the BFSI risk model. The Organization Learning Labs assesses whether your organization has the capabilities to make the shift."
@@ -38,7 +38,7 @@ export default async function Page({ searchParams }: Props) {
       <JsonLd
         data={webPageJsonLd("home", {
           path: content.industry === "it" ? "/" : `/?industry=${content.industry}`,
-          title: `The Organization Learning Labs — Capability readiness for ${IND[content.industry].name}`,
+          title: `The Organization Learning Labs | Capability readiness for ${IND[content.industry].name}`,
         })}
       />
       <HomePage initialIndustry={content.industry} content={content} />

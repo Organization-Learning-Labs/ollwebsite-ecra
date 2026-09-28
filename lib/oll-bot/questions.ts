@@ -1,7 +1,7 @@
 /**
  * Editable OLL bot question catalog.
  * Change welcome copy, scripted flow, and starter chips here.
- * Answers still come from the Railway agent DB — do not put Q&A pairs here.
+ * Answers still come from the Railway agent DB - do not put Q&A pairs here.
  *
  * Starters that the visitor already asked are hidden; keep this list long enough
  * that there are always fresh suggestions.
@@ -47,7 +47,7 @@ export const ollBotQuestions = {
     },
   ] satisfies FlowStep[],
 
-  /** Pilot concierge — landing shows nominate form; Self assess chip switches to self-assess flow. */
+  /** Pilot concierge - landing shows nominate form; Self assess chip switches to self-assess flow. */
   pilotStarters: [
     {
       label: 'Self assess',

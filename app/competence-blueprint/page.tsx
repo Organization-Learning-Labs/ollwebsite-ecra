@@ -1,20 +1,17 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import JsonLd from "@/components/JsonLd";
-import PhotoBand from "@/components/media/PhotoBand";
-import { AboutReveal } from "@/components/about/AboutReveal";
-import { AboutIconWell } from "@/components/about/aboutIcons";
-import {
-  cbArchitectureIcon,
-  cbCategoryIcon,
-  cbFoundationIcon,
-  cbLevelIcon,
-  cbPathwayAIcon,
-  cbSectionIcon,
-  cbSignificanceIcon,
-  cbTransformIcon,
-  type CbSectionKey,
-} from "@/components/competence-blueprint/competenceBlueprintIcons";
+import { SplitMedia } from "@/components/about/SplitMedia";
+import { BigStatement } from "@/components/story/BigStatement";
+import { FactSheet } from "@/components/story/FactSheet";
+import { NamedCards } from "@/components/story/NamedCards";
+import { NumberedList } from "@/components/story/NumberedList";
+import { PathwaysMap } from "@/components/story/PathwaysMap";
+import { StoryCta } from "@/components/story/StoryCta";
+import { StoryHead } from "@/components/story/StoryHead";
+import { StoryHero } from "@/components/story/StoryHero";
+import { StoryMotion } from "@/components/story/StoryMotion";
+import { TransformCycle } from "@/components/story/TransformCycle";
+import { WordGrid } from "@/components/story/WordGrid";
 import { competenceBlueprintContent as c } from "@/data/competence-blueprint";
 import { photos } from "@/lib/photos";
 import { breadcrumbJsonLd, buildMetadata, webPageJsonLd } from "@/lib/seo";
@@ -22,36 +19,22 @@ import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = buildMetadata("competenceBlueprint");
 
-function SectionLabel({
-  sectionKey,
-  children,
-}: {
-  sectionKey: CbSectionKey;
-  children: string;
-}) {
-  return (
-    <p className="label about-label">
-      <AboutIconWell icon={cbSectionIcon(sectionKey)} className="about-icon-well--sm" />
-      {children}
-    </p>
-  );
-}
+const TLDR = [
+  { k: "What it is", v: "A research-led architecture connecting strategy, future capabilities, workforce competence and reinvention" },
+  { k: "Purpose", v: "Connect external change to organizational capability, role-based competence and transformation action" },
+  { k: "Architecture", v: `${c.architecture.layers.length} layers: ${c.architecture.pipeline.join(", ")}` },
+  { k: "Competence categories", v: `${c.categories.items.length}: ${c.categories.items.map((i) => i.title).join(", ")}` },
+  { k: "Levels of application", v: `${c.levels.items.length}: ${c.levels.items.map((i) => i.title).join(", ")}` },
+  { k: "Pathways", v: "Organization transformation, or focused capability or role transformation" },
+  { k: "Connects to", v: "ECRA readiness assessment and transformation programs" },
+  { k: "Status", v: "A living architecture that evolves with research and evidence" },
+] as const;
 
-function VisualBand({
-  src,
-  caption,
-}: {
-  src: string;
-  caption: string;
-}) {
+function Arrow() {
   return (
-    <AboutReveal className="about-visual-wrap">
-      <div className="about-visual" aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt="" className="about-visual-img" />
-      </div>
-      <p className="about-visual-caption">{caption}</p>
-    </AboutReveal>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6" />
+    </svg>
   );
 }
 
@@ -68,332 +51,195 @@ export default function CompetenceBlueprintPage() {
         ]}
       />
 
-      {/* 1. Page head */}
-      <div className="phead about-phead">
-        <div className="wrap about-phead-inner">
-          <div className="about-phead-copy">
-            <p className="label">{c.hero.label}</p>
-            <h1>{c.hero.h1}</h1>
-            <p className="lede">{c.hero.lede}</p>
-            <div className="meta-row">
-              {c.hero.chips.map((chip) => (
-                <span key={chip}>{chip}</span>
-              ))}
-            </div>
-          </div>
-          <figure className="about-phead-figure" aria-hidden="true">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/about/about-layers.svg" alt="" />
-          </figure>
-        </div>
-      </div>
+      <StoryMotion />
+      <StoryHero eyebrow={c.hero.label} h1={c.hero.h1} lede={c.hero.lede} chips={c.hero.chips} highlight="Capability" />
 
       <section>
         <div className="wrap">
-          {c.hero.intro.map((p) => (
-            <p key={p.slice(0, 48)} className="lede" style={{ maxWidth: "72ch" }}>
-              {p}
-            </p>
-          ))}
-          <blockquote className="about-pull">{c.hero.pullQuote}</blockquote>
+          <NamedCards items={c.hero.shortIntro} cols={3} />
+          <div style={{ marginTop: 40 }}>
+            <BigStatement statement={c.hero.pullQuote} tone="dark" />
+          </div>
         </div>
       </section>
 
-      {/* 2. What is the OLL Competence Blueprint? */}
       <section className="alt">
         <div className="wrap">
-          <SectionLabel sectionKey="whatIs">{c.whatIs.label}</SectionLabel>
-          <h2>{c.whatIs.h2}</h2>
-          {c.whatIs.paragraphs.map((p) => (
-            <p key={p.slice(0, 48)} className="lede">
-              {p}
-            </p>
-          ))}
-          <blockquote className="about-pull">{c.whatIs.pullQuote}</blockquote>
+          <StoryHead eyebrow={c.whatIs.label} title={c.whatIs.h2} />
+          <NamedCards items={c.whatIs.shortParagraphs} cols={3} />
+          <p className="s-quote" data-reveal="up">{c.whatIs.pullQuote}</p>
         </div>
       </section>
 
-      <div className="wrap">
-        <PhotoBand photo={photos.blueprint} />
-      </div>
-
-      {/* 3. Capability and competence architecture */}
-      <section>
+      <section id="architecture">
         <div className="wrap">
-          <SectionLabel sectionKey="architecture">{c.architecture.label}</SectionLabel>
-          <h2>{c.architecture.h2}</h2>
-          <p className="lede">{c.architecture.lede}</p>
-          <div className="defs">
-            {c.architecture.layers.map((row, i) => (
-              <div className="def" key={row.title}>
-                <b>
-                  <AboutIconWell icon={cbArchitectureIcon(i)} className="about-icon-well--inline" />
-                  {row.title}
-                </b>
-                <p>{row.body}</p>
-              </div>
-            ))}
-          </div>
-          <ol className="about-pipeline" aria-label="Capability to role pipeline">
+          <StoryHead eyebrow={c.architecture.label} title={c.architecture.h2} lede={c.architecture.shortLede} />
+          <ol className="s-pipe" data-stagger aria-label="Capability to role pipeline" style={{ marginTop: 0, marginBottom: 28 }}>
             {c.architecture.pipeline.map((step, i) => (
-              <li key={step} className="about-pipeline-item" style={{ ["--i" as string]: i }}>
-                <AboutIconWell icon={cbArchitectureIcon(i)} />
-                <span className="about-pipeline-n">{i + 1}</span>
-                <span>{step}</span>
+              <li key={step}>
+                <span>{i + 1}</span>
+                {step}
               </li>
             ))}
           </ol>
-          <div className="note" style={{ marginTop: 28 }}>
-            <p>{c.architecture.note}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. Six competence categories */}
-      <section className="alt">
-        <div className="wrap">
-          <SectionLabel sectionKey="categories">{c.categories.label}</SectionLabel>
-          <h2>{c.categories.h2}</h2>
-          <p className="lede">{c.categories.lede}</p>
-          <div className="defs">
-            {c.categories.items.map((row, i) => (
-              <div className="def" key={row.title}>
-                <b>
-                  <AboutIconWell icon={cbCategoryIcon(i)} className="about-icon-well--inline" />
-                  {row.title}
-                </b>
-                <p>{row.body}</p>
+          <dl className="s-defs">
+            {c.architecture.layers.map((row) => (
+              <div key={row.title}>
+                <dt>{row.title}</dt>
+                <dd>{row.body}</dd>
               </div>
             ))}
-          </div>
-          <p className="lede" style={{ marginTop: 28 }}>
-            {c.categories.closing}
-          </p>
+          </dl>
+          <p className="s-note">{c.architecture.note}</p>
         </div>
       </section>
 
-      <div className="wrap">
-        <PhotoBand photo={photos.levels} />
-      </div>
-
-      {/* 5. Four levels of application */}
-      <section>
-        <div className="wrap">
-          <SectionLabel sectionKey="levels">{c.levels.label}</SectionLabel>
-          <h2>{c.levels.h2}</h2>
-          <p className="lede">{c.levels.lede}</p>
-          <ol className="about-pillars">
-            {c.levels.items.map((item, i) => (
-              <li key={item.title}>
-                <div className="about-pillars-mark">
-                  <AboutIconWell icon={cbLevelIcon(i)} />
-                  <span className="about-pillars-n">{i + 1}</span>
-                </div>
-                <div>
-                  <strong>{item.title}</strong>
-                  <p>{item.body}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <p className="lede" style={{ marginTop: 28 }}>
-            {c.levels.closing}
-          </p>
-        </div>
-      </section>
-
-      <div className="wrap">
-        <VisualBand src="/about/about-levels.svg" caption={c.pathways.label} />
-      </div>
-
-      {/* 6. Two pathways */}
       <section className="alt">
         <div className="wrap">
-          <SectionLabel sectionKey="pathways">{c.pathways.label}</SectionLabel>
-          <h2>{c.pathways.h2}</h2>
-          <p className="lede">{c.pathways.lede}</p>
-
-          <h3 className="about-subhead">{c.pathways.pathwayAHeading}</h3>
-          <div className="chain">
-            {c.pathways.pathwayA.map((step, i) => (
-              <div className="chain-row about-chain-row" key={step.title}>
-                <b>
-                  <AboutIconWell icon={cbPathwayAIcon(i)} className="about-icon-well--inline" />
-                  {i + 1}. {step.title}
-                </b>
-                <span>{step.body}</span>
-              </div>
-            ))}
-          </div>
-
-          <h3 className="about-subhead">{c.pathways.pathwayBHeading}</h3>
-          <p className="lede">{c.pathways.pathwayB}</p>
-          <blockquote className="about-pull">{c.pathways.pullQuote}</blockquote>
+          <StoryHead eyebrow={c.categories.label} title={c.categories.h2} />
+          <WordGrid items={c.categories.items.map((i) => ({ title: i.title, line: i.body }))} />
+          <p className="s-closing">{c.categories.closing}</p>
         </div>
       </section>
 
-      {/* 7. Current vs future organization archetypes */}
       <section>
         <div className="wrap">
-          <SectionLabel sectionKey="archetypes">{c.archetypes.label}</SectionLabel>
-          <h2>{c.archetypes.h2}</h2>
-          <p className="lede">{c.archetypes.lede}</p>
-          <div className="grid-2" style={{ marginTop: 36 }}>
-            <div>
-              <h3 className="about-col-h">{c.archetypes.currentTitle}</h3>
-              <p className="lede" style={{ marginTop: 10 }}>
+          <SplitMedia photo={photos.levels}>
+            <p className="s-eyebrow">{c.levels.label}</p>
+            <h2 className="s-split-h">{c.levels.h2}</h2>
+            <p className="s-lede">{c.levels.shortLede}</p>
+          </SplitMedia>
+          <div style={{ marginTop: 32 }}>
+            <NamedCards items={c.levels.items} cols={4} closing={c.levels.shortClosing} />
+          </div>
+        </div>
+      </section>
+
+      <section id="pathways" className="alt">
+        <div className="wrap">
+          <StoryHead eyebrow={c.pathways.label} title={c.pathways.h2} lede={c.pathways.shortLede} />
+          <PathwaysMap
+            aHeading={c.pathways.pathwayAHeading}
+            aSteps={c.pathways.pathwayA}
+            bHeading={c.pathways.pathwayBHeading}
+            bBody={c.pathways.pathwayB}
+            bEntries={c.pathways.pathwayBEntries}
+            bSteps={c.pathways.pathwayBSteps}
+            chain={c.pathways.chain}
+            chainLabel={`${c.pathways.pullQuote.split(":")[0]}.`}
+          />
+        </div>
+      </section>
+
+      <section>
+        <div className="wrap">
+          <StoryHead eyebrow={c.archetypes.label} title={c.archetypes.h2} lede={c.archetypes.shortLede} />
+          <div className="shift compare-shift" role="table" aria-label="Current versus future archetype">
+            <div className="shift-head" role="row">
+              <div>View</div>
+              <div>{c.archetypes.currentTitle}</div>
+              <div aria-hidden="true" />
+              <div className="to">{c.archetypes.futureTitle}</div>
+            </div>
+            <div className="shift-row" role="row">
+              <div className="shift-dim" role="rowheader">
+                Archetype
+              </div>
+              <div className="shift-is" role="cell">
                 {c.archetypes.currentBody}
-              </p>
-            </div>
-            <div>
-              <h3 className="about-col-h">{c.archetypes.futureTitle}</h3>
-              <p className="lede" style={{ marginTop: 10 }}>
+              </div>
+              <div className="shift-arrow" aria-hidden="true">
+                <Arrow />
+              </div>
+              <div className="shift-to" role="cell">
                 {c.archetypes.futureBody}
-              </p>
+              </div>
             </div>
           </div>
-          <p className="lede" style={{ marginTop: 28 }}>
-            {c.archetypes.comparison}
+          <p className="s-closing">{c.archetypes.shortComparison}</p>
+          <p className="s-note">{c.archetypes.note}</p>
+        </div>
+      </section>
+
+      <section className="alt">
+        <div className="wrap">
+          <SplitMedia photo={photos.engineering} reverse>
+            <p className="s-eyebrow">{c.toCompetencies.label}</p>
+            <h2 className="s-split-h">{c.toCompetencies.h2}</h2>
+            <p className="s-lede">{c.toCompetencies.shortLede}</p>
+          </SplitMedia>
+          <p className="about-example-k" style={{ marginTop: 40 }}>
+            {c.toCompetencies.exampleTitle}
           </p>
-          <div className="note" style={{ marginTop: 28 }}>
-            <p>{c.archetypes.note}</p>
-          </div>
-        </div>
-      </section>
-
-      <div className="wrap">
-        <PhotoBand photo={photos.engineering} />
-      </div>
-
-      {/* 8. From capabilities to competencies */}
-      <section className="alt">
-        <div className="wrap">
-          <SectionLabel sectionKey="toCompetencies">{c.toCompetencies.label}</SectionLabel>
-          <h2>{c.toCompetencies.h2}</h2>
-          <p className="lede">{c.toCompetencies.lede}</p>
-          <h3 className="about-subhead">{c.toCompetencies.exampleTitle}</h3>
-          <div className="chain">
-            {c.toCompetencies.exampleRows.map((row, i) => (
-              <div className="chain-row about-chain-row" key={row.title}>
-                <b>
-                  <AboutIconWell icon={cbPathwayAIcon(i)} className="about-icon-well--inline" />
-                  {row.title}
-                </b>
-                <span>{row.body}</span>
-              </div>
-            ))}
-          </div>
-          <div className="note" style={{ marginTop: 28 }}>
-            <p>{c.toCompetencies.note}</p>
-          </div>
-        </div>
-      </section>
-
-      <div className="wrap">
-        <PhotoBand photo={photos.planning} />
-      </div>
-
-      {/* 9. From blueprint to transformation */}
-      <section>
-        <div className="wrap">
-          <SectionLabel sectionKey="transformation">{c.transformation.label}</SectionLabel>
-          <h2>{c.transformation.h2}</h2>
-          <p className="lede">{c.transformation.lede}</p>
-          <div className="chain">
-            {c.transformation.stages.map((step, i) => (
-              <div className="chain-row about-chain-row" key={step.title}>
-                <b>
-                  <AboutIconWell icon={cbTransformIcon(i)} className="about-icon-well--inline" />
-                  {i + 1}. {step.title}
-                </b>
-                <span>{step.body}</span>
-              </div>
-            ))}
-          </div>
-          <div className="note" style={{ marginTop: 28 }}>
-            <p>{c.transformation.note}</p>
-          </div>
-          <blockquote className="about-pull">{c.transformation.pullQuote}</blockquote>
-        </div>
-      </section>
-
-      <div className="wrap">
-        <VisualBand src="/about/about-cycle.svg" caption={c.ecra.label} />
-      </div>
-
-      {/* 10. Connection with ECRA + foundation + CTA */}
-      <section className="alt">
-        <div className="wrap">
-          <SectionLabel sectionKey="ecra">{c.ecra.label}</SectionLabel>
-          <h2>{c.ecra.h2}</h2>
-          <p className="lede">{c.ecra.lede}</p>
-          <p className="lede">{c.ecra.body}</p>
-          <div className="defs">
-            {c.ecra.trio.map((row) => (
-              <div className="def" key={row.title}>
-                <b>{row.title}</b>
-                <p>{row.body}</p>
-              </div>
-            ))}
-          </div>
-          <div className="note" style={{ marginTop: 28 }}>
-            <p>{c.ecra.caveat}</p>
-          </div>
+          <NumberedList items={c.toCompetencies.exampleRows} cols={2} label={c.toCompetencies.exampleTitle} />
+          <p className="s-note">{c.toCompetencies.note}</p>
         </div>
       </section>
 
       <section>
         <div className="wrap">
-          <SectionLabel sectionKey="foundation">{c.foundation.label}</SectionLabel>
-          <h2>{c.foundation.h2}</h2>
-          <p className="lede">{c.foundation.lede}</p>
-          <ol className="about-pipeline about-pipeline--3" aria-label="Research to outcomes pipeline">
+          <StoryHead eyebrow={c.transformation.label} title={c.transformation.h2} lede={c.transformation.shortLede} />
+          <TransformCycle
+            stages={c.transformation.stages}
+            loopLabel="Refine based on evidence, then diagnose again"
+            label="Blueprint to transformation stages"
+          />
+          <p className="s-note">{c.transformation.note}</p>
+          <p className="s-quote" data-reveal="up">{c.transformation.pullQuote}</p>
+        </div>
+      </section>
+
+      <section id="ecra" className="alt">
+        <div className="wrap">
+          <StoryHead eyebrow={c.ecra.label} title={c.ecra.h2} lede={c.ecra.shortLede} />
+          <NamedCards items={c.ecra.trio} cols={3} closing={c.ecra.shortBody} />
+          <p className="s-note">{c.ecra.caveat}</p>
+        </div>
+      </section>
+
+      <section id="close">
+        <div className="wrap">
+          <BigStatement
+            eyebrow={c.foundation.label}
+            statement={c.foundation.h2}
+            body={c.foundation.shortLede}
+            tone="dark"
+          />
+          <ol className="s-pipe" data-stagger aria-label="Research to outcomes pipeline">
             {c.foundation.pipeline.map((step, i) => (
-              <li key={step} className="about-pipeline-item" style={{ ["--i" as string]: i }}>
-                <AboutIconWell icon={cbFoundationIcon(i)} />
-                <span className="about-pipeline-n">{i + 1}</span>
-                <span>{step}</span>
+              <li key={step}>
+                <span>{i + 1}</span>
+                {step}
               </li>
             ))}
           </ol>
-          <h3 className="about-subhead">{c.foundation.significanceHeading}</h3>
-          <div className="defs">
-            {c.foundation.significance.map((row, i) => (
-              <div className="def" key={row.title}>
-                <b>
-                  <AboutIconWell icon={cbSignificanceIcon(i)} className="about-icon-well--inline" />
-                  {row.title}
-                </b>
-                <p>{row.body}</p>
-              </div>
-            ))}
-          </div>
-          <p className="lede" style={{ marginTop: 28 }}>
-            {c.foundation.living}
-          </p>
+          <h3 className="s-sub">{c.foundation.significanceHeading}</h3>
+          <NamedCards items={c.foundation.significance} cols={3} closing={c.foundation.shortLiving} />
           {c.foundation.closingQuotes.map((q) => (
-            <blockquote className="about-pull" key={q.slice(0, 40)}>
+            <p className="s-quote" data-reveal="up" key={q.slice(0, 40)}>
               {q}
-            </blockquote>
+            </p>
           ))}
+        </div>
+      </section>
 
-          <div className="cta-band" style={{ marginTop: 48 }}>
-            <div>
-              <h2>{c.close.ctaHeading}</h2>
-              <p>{c.close.ctaBody}</p>
-            </div>
-            <div className="acts">
-              <a className="btn btn-primary" href={siteConfig.platform.signup}>
-                {c.close.primaryLabel}
-              </a>
-              <Link className="btn btn-ghost" href={c.close.secondaryHref}>
-                {c.close.secondaryLabel}
-              </Link>
-              <Link className="btn btn-ghost" href={c.close.tertiaryHref}>
-                {c.close.tertiaryLabel}
-              </Link>
-            </div>
-          </div>
+      <section className="alt">
+        <div className="wrap">
+          <FactSheet rows={TLDR} />
+        </div>
+      </section>
+
+      <section>
+        <div className="wrap">
+          <StoryCta
+            heading={c.close.ctaHeading}
+            body={c.close.ctaBody}
+            actions={[
+              { label: c.close.primaryLabel, href: siteConfig.platform.signup, primary: true },
+              { label: c.close.secondaryLabel, href: c.close.secondaryHref },
+              { label: c.close.tertiaryLabel, href: c.close.tertiaryHref },
+            ]}
+          />
         </div>
       </section>
     </main>

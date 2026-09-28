@@ -1,4 +1,4 @@
-/** About Us page content — sourced from OLL ECRA About Us Content PDF. */
+/** About Us page content - sourced from OLL ECRA About Us Content PDF. */
 
 export type LabeledItem = { title: string; body: string };
 export type ChainStep = { title: string; body: string };
@@ -10,6 +10,10 @@ export const aboutContent = {
     h1: "Building the operating system for enterprise reinvention.",
     lede:
       "The Organization Learning Labs (OLL) is building a research-led enterprise capability transformation platform that helps organizations understand change, design future capabilities and develop the capacity to continuously adapt, transform and remain future-ready.",
+    shortLede:
+      "OLL is a research-led enterprise capability transformation platform. We help organizations understand change, design future capabilities and keep adapting, transforming and staying future-ready.",
+    shortBody:
+      "Continuous disruption demands more than isolated technology investments or training. Organizations need to know what they must become capable of, how prepared they are today and how to build what is missing. OLL connects research, enterprise intelligence, capability architecture, competence blueprints, development and transformation into one integrated approach.",
     chips: ["Research", "Capability", "Reinvention"] as const,
     body: [
       "Organizations today are navigating continuous disruption across industries, technologies, business models, workforce structures and operating environments. Responding to these changes requires more than isolated technology investments or individual training initiatives. It requires organizations to understand what they must become capable of doing, how prepared they are today, and how they can systematically develop the capabilities required for the future.",
@@ -37,6 +41,22 @@ export const aboutContent = {
       "An organization may have talented people and established processes, yet still lack the integrated capabilities required to respond effectively to future business demands.",
       "Capability readiness helps organizations examine this gap. It enables leaders to explore what capabilities may be required, whether current capabilities align with strategic priorities, which organizational enablers need attention, and where capability investments may need to be prioritized.",
     ],
+    shortLede:
+      "Organizations often have to respond to change before its full impact is visible, and existing structures were not designed for what comes next.",
+    shortPoints: [
+      {
+        title: "Change arrives first",
+        body: "New technology, customer expectations, business models, regulation and workforce shifts create requirements existing structures were not built for.",
+      },
+      {
+        title: "Talent alone is not enough",
+        body: "Talented people and established processes can still lack the integrated capabilities future business demands require.",
+      },
+      {
+        title: "Readiness reveals the gap",
+        body: "It shows which capabilities may be needed, how they align with strategy, which enablers need attention and where to prioritize investment.",
+      },
+    ] satisfies LabeledItem[],
     question:
       "What must the organization be capable of doing next, and how prepared is it to do so?",
     note:
@@ -48,36 +68,43 @@ export const aboutContent = {
     h2: "Meaningful reinvention begins with integrity.",
     lede:
       "At The Organization Learning Labs, we believe meaningful enterprise reinvention begins with the integrity of the people and principles behind it. Our values shape how we learn, conduct research, develop frameworks, engage stakeholders and interpret the responsibilities that come with organizational intelligence and capability assessment.",
+    shortLede:
+      "Our values shape how we learn, research, build frameworks, engage stakeholders and handle the responsibility that comes with capability assessment.",
     items: [
       {
         title: "Honesty",
         principle:
           "Be truthful to ourselves, our family, our team, our work, our craft and our stakeholders at all costs.",
         body: "We value truthfulness, integrity and intellectual honesty. We aim to acknowledge reality as it is, communicate what we know and do not know, and avoid compromising the truth for convenience or short-term gain.",
+        short: "We acknowledge reality as it is, say what we know and do not know, and never trade truth for convenience.",
       },
       {
         title: "Learning Mindset",
         principle: 'Learning begins with acknowledging, "I don\'t know."',
         body: "We see the recognition of what we do not know as the beginning of meaningful learning. We remain open to questions, feedback, evidence and perspectives that challenge our assumptions.",
+        short: "We stay open to questions, feedback, evidence and perspectives that challenge our assumptions.",
       },
       {
         title: "Seeking Knowledge",
         principle: "Knowledge can only be sought, not fully attained.",
         body: "We approach knowledge as a continuous pursuit. We encourage inquiry, research, experimentation and intellectual humility, recognizing that our understanding can always be expanded, tested and refined.",
+        short: "A continuous pursuit through inquiry, research, experimentation and intellectual humility, always open to refinement.",
       },
       {
         title: "Purpose of Learning",
         principle:
           "The goal of learning is to see beyond symptoms, but action depends on intent.",
         body: "We seek to understand underlying causes, systems and conditions behind visible problems. We also recognize that knowledge alone does not determine action; action must be guided by purpose, intent, responsibility and judgment.",
+        short: "We look for underlying causes and systems, and let purpose, intent, responsibility and judgment guide action.",
       },
       {
         title: "Journey Over Destination",
         principle:
           "The process of learning and growth is more important than the final outcome.",
         body: "We value continuous development, reflection and improvement. Outcomes matter, but sustainable growth is built through the quality of the journey, the lessons gained and the capabilities developed.",
+        short: "Outcomes matter, but lasting growth comes from reflection, improvement and the capabilities built along the way.",
       },
-    ] satisfies Array<{ title: string; principle: string; body: string }>,
+    ] satisfies Array<{ title: string; principle: string; body: string; short: string }>,
   },
 
   pillars: {
@@ -85,6 +112,8 @@ export const aboutContent = {
     h2: "How we work and what we commit to.",
     lede:
       "Our Pillars of Success define how we approach our work, commitments, relationships, learning and responsibility to stakeholders. They guide not only what we aim to achieve, but also how we choose to achieve it.",
+    shortLede:
+      "How we approach our work, commitments, relationships, learning and stakeholders. They guide not only what we achieve, but how.",
     items: [
       {
         title: "Honesty",
@@ -100,7 +129,7 @@ export const aboutContent = {
       },
       {
         title: "What I Commit, I Deliver",
-        body: "All commitments are binding to me—whether they concern deadlines, workflows, the team, myself, family or friends.",
+        body: "All commitments are binding to me, whether they concern deadlines, workflows, the team, myself, family or friends.",
       },
       {
         title: '"No" Is OK',
@@ -136,6 +165,8 @@ export const aboutContent = {
     h2: "From understanding disruption to enabling transformation.",
     lede:
       "OLL follows a research-led and decision-oriented approach that connects organizational intelligence with capability development and transformation. Research is not treated as an isolated publication activity. It provides an evidence base for understanding how organizations may need to evolve, what capabilities may become important and where organizational responses require further examination.",
+    shortLede:
+      "A research-led, decision-oriented approach. Research is not a publication exercise; it is the evidence base for how organizations may need to evolve and which capabilities will matter.",
     steps: [
       {
         title: "Research and organizational intelligence",
@@ -199,8 +230,12 @@ export const aboutContent = {
       "These changes cannot be understood through internal performance data alone. They require continuous research, dialogue and interpretation involving industry experts, practitioners, academicians and other relevant stakeholders.",
       "At The Organization Learning Labs, we use research to explore how industries and organizations may evolve, what future capabilities may become important, and which competencies individuals and teams may need to develop to support that evolution. This research forms the foundation for our Competence Blueprint.",
     ],
+    shortIntro:
+      "Reinvention starts with understanding how the world around an organization is changing, from technology and customers to regulation, geopolitics and workforce dynamics. Internal data alone cannot show this. Our research with experts, practitioners and academicians explores how industries may evolve, which capabilities will matter and which competencies people need. It is the foundation of our Competence Blueprint.",
     pullQuote:
       "The Competence Blueprint connects the future enterprise to the people, roles and competencies required to make that future possible.",
+    shortExpert:
+      "Future requirements cannot be read from today's job descriptions, skill inventories or structures. We engage knowledge communities to explore structural industry shifts, evolving business and operating models, emerging capabilities and responsibilities, and competencies that must change, deepen or combine.",
     expertHeading: "Research with industry experts and academicians",
     expertBody:
       "Future capability requirements cannot be determined by relying exclusively on existing job descriptions, historical skill inventories or current organizational structures. OLL seeks to understand emerging requirements through research and engagement with relevant knowledge communities. These engagements help explore what structural changes are affecting an industry, how business models and operating models may evolve, which organizational capabilities may become important, what new responsibilities may emerge, and which competencies may need to change, deepen or be combined.",
@@ -238,6 +273,8 @@ export const aboutContent = {
     architectureHeading: "The capability and competence architecture",
     architectureLede:
       "To support a consistent research-to-readiness system, OLL uses a connected architecture that distinguishes between broad organizational capability domains and the competencies that enable them.",
+    shortArchitectureLede:
+      "One connected architecture separates broad organizational capability domains from the competencies that enable them.",
     hierarchy: [
       {
         title: "Capability Family",
@@ -305,6 +342,8 @@ export const aboutContent = {
     whyHeading: "Why the Competence Blueprint matters for enterprise reinvention",
     whyLede:
       "Enterprise reinvention requires organizations to translate strategic intent into organizational ability and then into actionable development priorities. The Competence Blueprint provides a common reference structure for connecting research, future capability design, readiness assessment, learning and development, and longer-term organizational transformation.",
+    shortWhyLede:
+      "Reinvention means turning strategic intent into organizational ability, then into development priorities. The blueprint is the common reference structure that connects them.",
     whyBullets: [
       {
         title: "Research and future capability design",
@@ -337,6 +376,12 @@ export const aboutContent = {
     lede:
       "The OLL Enterprise Capability Readiness Assessment (ECRA) is a structured approach for exploring how prepared an organization, business unit, function, team or individual is to meet defined future capability requirements.",
     body: "ECRA connects future organizational requirements with capability models, competence blueprints and readiness-oriented questions. It helps participants and authorized organizational stakeholders develop a clearer understanding of current strengths, potential gaps and areas requiring further attention.",
+    shortLede:
+      "A structured way to explore how prepared an organization, business unit, function, team or individual is for defined future capability requirements.",
+    shortBody:
+      "It links future requirements to capability models, competence blueprints and readiness questions, giving participants and authorized stakeholders a clearer view of strengths, gaps and areas needing attention.",
+    shortLevelsLede:
+      "Readiness is not about individual skills alone. It depends on how capabilities are built and applied where strategic, operational and workforce decisions are made.",
     examinesHeading: "Depending on the assessment scope, ECRA may examine:",
     examines: [
       "Future organizational capability requirements.",
@@ -369,7 +414,7 @@ export const aboutContent = {
         body: "Role-specific competence, workforce readiness and development needs.",
       },
     ] satisfies LabeledItem[],
-    isNotHeading: "What ECRA is—and what it is not.",
+    isNotHeading: "What ECRA is, and what it is not.",
     isBody:
       "ECRA is designed to support readiness exploration and capability-related decision-making.",
     isNot: [
@@ -426,6 +471,10 @@ export const aboutContent = {
     lede:
       "Enterprise reinvention is the ongoing process through which an organization re-examines and evolves its strategy, operating model, capabilities, leadership, technology, governance and ways of working in response to changing business and environmental conditions.",
     body: "It is broader than digital transformation or workforce training. Reinvention concerns how an organization creates value, makes decisions, organizes work, develops capabilities and sustains relevance over time.",
+    shortLede:
+      "The ongoing evolution of strategy, operating model, capabilities, leadership, technology, governance and ways of working as conditions change.",
+    shortBody:
+      "Broader than digital transformation or training: it is how an organization creates value, decides, organizes work, builds capabilities and stays relevant.",
     perspectiveHeading: "OLL's enterprise reinvention perspective",
     perspectiveLede:
       "OLL approaches enterprise reinvention as a connected system rather than a series of independent initiatives.",
@@ -475,6 +524,8 @@ export const aboutContent = {
     h2: "Building trust through clarity, context and responsible use.",
     lede:
       "Capability readiness assessments can influence how organizations understand their workforce, development priorities and transformation requirements. OLL therefore believes that assessment should be conducted with clarity about its purpose, evidence, limitations and intended use.",
+    shortLede:
+      "Assessments shape how organizations see their workforce and priorities, so they must be clear about purpose, evidence, limitations and intended use.",
     grounding:
       "Our commitment to responsible assessment is grounded in our organizational values.",
     commitments: [
@@ -510,14 +561,24 @@ export const aboutContent = {
     participantsHeading: "Our commitment to participants and organizations",
     participantsBody:
       "We aim to ensure that ECRA supports informed reflection and better capability-related decisions rather than creating unsupported labels or conclusions. We recognize that a readiness result is not a complete description of an organization or individual; assessment findings depend on scope and evidence quality; capability readiness is contextual and can change over time; and development priorities should be considered alongside organizational realities and strategic objectives.",
+    participantsIntro:
+      "We aim to ensure that ECRA supports informed reflection and better capability-related decisions rather than creating unsupported labels or conclusions. We recognize that:",
+    participantsPoints: [
+      "A readiness result is not a complete description of an organization or individual.",
+      "Assessment findings depend on scope and evidence quality.",
+      "Capability readiness is contextual and can change over time.",
+      "Development priorities should be considered alongside organizational realities and strategic objectives.",
+    ],
     objective:
-      "Our objective is to make capability readiness more visible, structured and actionable—helping organizations understand what they may need to become capable of next, where they stand today, and what they can consider doing to prepare.",
+      "Our objective is to make capability readiness more visible, structured and actionable, helping organizations understand what they may need to become capable of next, where they stand today, and what they can consider doing to prepare.",
   },
 
   close: {
     label: "Closing perspective",
     h2: "Research. Capability. Reinvention.",
     body: "The future organization must be designed with an understanding of the world it will operate in. Our research helps us explore that world; our capability architecture translates those insights into organizational requirements; and our Competence Blueprint connects those requirements to the people, roles and competencies needed to support enterprise reinvention.",
+    shortBody:
+      "Research helps us explore the world an organization will operate in. Capability architecture turns those insights into requirements. The Competence Blueprint connects them to the people, roles and competencies that make reinvention possible.",
     org: "The Organization Learning Labs",
     ctaHeading: "Assess readiness at the level you make decisions at.",
     ctaBody:

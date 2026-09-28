@@ -54,7 +54,7 @@ export function CatalogRenderer({
           nominationResult?.message ||
           (autoAssigned
             ? 'Thank you. We matched the nominee to a diagnostic assessment and sent them an invitation. You will receive the diagnostic report when they complete it.'
-            : 'Thank you. We could not auto-match this job title — our team will assign the right assessment shortly. You will receive the diagnostic report when the nominee completes it.')
+            : 'Thank you. We could not auto-match this job title. Our team will assign the right assessment shortly. You will receive the diagnostic report when the nominee completes it.')
         }
       />
     );

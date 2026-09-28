@@ -229,7 +229,7 @@ export function extractAssessmentOffers(
 }
 
 function normalizeTitle(value: string): string {
-  return value.toLowerCase().replace(/\s+/g, ' ').replace(/[–—-]/g, '-').trim();
+  return value.toLowerCase().replace(/\s+/g, ' ').replace(/[\u2013\u2014-]/g, '-').trim();
 }
 
 function lineMatchesOffer(line: string, offers: AssessmentOffer[]): boolean {

@@ -4,14 +4,11 @@
  */
 
 import {
-  ART_BASE,
-  BAND,
-  COMPS,
+  FAQS,
   HERO_IMAGES,
   IND,
+  OLL_STATEMENT,
   RESEARCH,
-  TARGET,
-  VISIBLE_COMPS,
   type CardItem,
   type CaseStudy,
   type IndustryKey,
@@ -22,15 +19,12 @@ export type ContentSource = "live" | "fallback";
 
 export type HomeContent = {
   industry: IndustryKey;
-  artBase: typeof ART_BASE;
   industries: typeof IND;
+  statement: typeof OLL_STATEMENT;
+  faqs: typeof FAQS;
   practices: Record<IndustryKey, CardItem[]>;
   research: Record<IndustryKey | "all", CardItem[]>;
   cases: Record<IndustryKey, CaseStudy[]>;
-  comps: typeof COMPS;
-  band: typeof BAND;
-  target: typeof TARGET;
-  visibleComps: typeof VISIBLE_COMPS;
   heroImages: typeof HERO_IMAGES;
   contentSource: {
     research: Record<IndustryKey, ContentSource>;
@@ -96,15 +90,12 @@ export async function getHomeContent(industryParam?: string | string[]): Promise
 
   return {
     industry,
-    artBase: ART_BASE,
     industries: IND,
+    statement: OLL_STATEMENT,
+    faqs: FAQS,
     practices,
     research: { ...research, all: research.it.length ? research.it : RESEARCH.all },
     cases,
-    comps: COMPS,
-    band: BAND,
-    target: TARGET,
-    visibleComps: VISIBLE_COMPS,
     heroImages: HERO_IMAGES,
     contentSource,
   };

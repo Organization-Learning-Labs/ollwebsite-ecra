@@ -1,6 +1,6 @@
 /**
  * Fetches text from allowlisted OLL websites and injects it into the agent prompt.
- * This is how the bot "reads" your sites — not open-web search (Tavily/Bifrost).
+ * This is how the bot "reads" your sites - not open-web search (Tavily/Bifrost).
  *
  * Note: www.platform.ollacademy.com and www.research.ollacademy.com do not resolve;
  * use platform.ollacademy.com and research.ollacademy.com instead.
