@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type ReactNode } from "react";
 import type { HomeContent } from "@/lib/content";
 import type { CardItem, CaseStudy, FaqPart, IndustryKey } from "@/data/home";
 import { ecraIntro, ecraLevels, journey } from "@/data/ecra";
@@ -28,7 +28,7 @@ function Arrow() {
 }
 
 const STORY_TABS: Record<IndustryKey, { n: string; title: string; sub: string }> = {
-  it: { n: "01", title: "Technology and IT services", sub: "AI broke the business model" },
+  it: { n: "01", title: "IT Services and Consulting", sub: "AI broke the business model" },
   bfsi: { n: "02", title: "Banking, financial services and insurance", sub: "AI broke the risk model" },
 };
 
@@ -37,7 +37,7 @@ function Seg({ industry, onSelect }: { industry: IndustryKey; onSelect: (k: Indu
     <div className="seg" role="group" aria-label="Industry" data-active={industry}>
       <span className="seg-pill" aria-hidden="true" />
       <button data-ind="it" aria-pressed={industry === "it"} onClick={() => onSelect("it")}>
-        Technology and IT
+        IT Services
       </button>
       <button data-ind="bfsi" aria-pressed={industry === "bfsi"} onClick={() => onSelect("bfsi")}>
         BFSI
@@ -58,7 +58,11 @@ function ResCard({ r, read, external, i = 0 }: { r: CardItem; read: string; exte
         {r.img ? (
           <span className="res-img-in" style={{ backgroundImage: `url('${r.img}')` }} />
         ) : (
-          "Image 1600\u00d7900"
+          <span className="res-img-fb" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M5 4h10l4 4v12H5zM15 4v4h4M8.5 12.5h7M8.5 16h5" />
+            </svg>
+          </span>
         )}
       </div>
       <div className="res-body">
@@ -75,6 +79,99 @@ function ResCard({ r, read, external, i = 0 }: { r: CardItem; read: string; exte
         </div>
       </div>
     </a>
+  );
+}
+
+/** Distance between the starts of two neighbouring cards in a slider track. */
+function trackStep(track: HTMLElement | null) {
+  const card = track?.firstElementChild as HTMLElement | null;
+  if (!track || !card) return 0;
+  return card.offsetWidth + (parseFloat(getComputedStyle(track).columnGap) || 0);
+}
+
+function ResSlider({
+  items,
+  label,
+  read,
+  children,
+}: {
+  items: CardItem[];
+  label: string;
+  read: string;
+  children: ReactNode;
+}) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState(0);
+  const [stops, setStops] = useState(1);
+
+  const measure = useCallback(() => {
+    const track = trackRef.current;
+    const s = trackStep(track);
+    if (!track || !s) return;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+    setStops(maxScroll > 2 ? Math.round(maxScroll / s) + 1 : 1);
+    setPos(maxScroll > 2 && track.scrollLeft >= maxScroll - 2 ? Math.round(maxScroll / s) : Math.round(track.scrollLeft / s));
+  }, []);
+
+  useEffect(() => {
+    measure();
+    const track = trackRef.current;
+    if (!track) return;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(measure);
+    };
+    track.addEventListener("scroll", onScroll, { passive: true });
+    const ro = new ResizeObserver(measure);
+    ro.observe(track);
+    return () => {
+      cancelAnimationFrame(raf);
+      track.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+    };
+  }, [measure, items.length]);
+
+  const go = (i: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    track.scrollTo({ left: Math.max(0, Math.min(i, stops - 1)) * trackStep(track), behavior: reduce ? "auto" : "smooth" });
+  };
+
+  return (
+    <div className="res-slider">
+      <div className="res-track" ref={trackRef} role="region" aria-label={label} tabIndex={-1} data-stagger>
+        {items.map((r, i) => (
+          <ResCard key={r.u || r.t} r={r} i={i} read={read} external />
+        ))}
+      </div>
+      <div className="res-ctrl">
+        {stops > 1 ? (
+          <div className="res-nav">
+            <button className="res-arrow" aria-label="Previous articles" disabled={pos <= 0} onClick={() => go(pos - 1)}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
+            </button>
+            <div className="res-dots" role="group" aria-label="Choose position">
+              {Array.from({ length: stops }, (_, i) => (
+                <button
+                  key={i}
+                  aria-label={`Show articles ${i + 1} onwards`}
+                  aria-current={i === pos ? "true" : undefined}
+                  onClick={() => go(i)}
+                />
+              ))}
+            </div>
+            <button className="res-arrow" aria-label="Next articles" disabled={pos >= stops - 1} onClick={() => go(pos + 1)}>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            </button>
+          </div>
+        ) : (
+          <span />
+        )}
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -157,7 +254,7 @@ export default function HomePage({
 
   const d = IND[industry];
   const cases = CASES[industry] ?? [];
-  const research = (RESEARCH[industry] ?? RESEARCH.all).slice(0, 3);
+  const research = RESEARCH[industry]?.length ? RESEARCH[industry] : RESEARCH.all;
   const practices = PRACTICES[industry] ?? [];
   const liveResearch = contentSource.research[industry] === "live";
 
@@ -522,12 +619,7 @@ export default function HomePage({
               </div>
               <Seg industry={industry} onSelect={selectIndustry} />
             </div>
-            <div className="res-grid" id="res-grid" data-stagger>
-              {research.map((r) => (
-                <ResCard key={r.u} r={r} read="Read synopsis" external />
-              ))}
-            </div>
-            <div className="sec-foot">
+            <ResSlider key={industry} items={research} label="Research articles" read="Read synopsis">
               <a
                 className="btn btn-ghost btn-arrow"
                 href={marketplaceViewAllUrl("research_synopsis")}
@@ -537,7 +629,7 @@ export default function HomePage({
                 View all research
                 <Arrow />
               </a>
-            </div>
+            </ResSlider>
           </div>
         </section>
 
@@ -597,33 +689,8 @@ export default function HomePage({
           </div>
         </section>
 
-        {/* ============ FAQ ============ */}
-        <section id="faq" className="alt" aria-labelledby="faq-title">
-          <div className="wrap faq-grid">
-            <div className="faq-intro" data-reveal>
-              <p className="label">Questions</p>
-              <h2 id="faq-title">What leaders usually ask first.</h2>
-              <p className="lede">Something else on your mind? Call the team on +91 76766 46518.</p>
-              <div style={{ marginTop: 28 }}>
-                <a className="btn btn-primary" href="https://platform.ollacademy.com/signup">Assess your readiness</a>
-              </div>
-            </div>
-            <div className="faq" id="faqlist">
-              {faqs.map((f, i) => (
-                <details key={f.q}>
-                  <summary>
-                    <span className="faq-n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-                    <span>{f.q}</span>
-                  </summary>
-                  <FaqBody parts={f.parts} />
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* ============ BEST PRACTICES ============ */}
-        <section id="best-practices" aria-labelledby="bp-title">
+        <section id="best-practices" className="alt" aria-labelledby="bp-title">
           <div className="wrap">
             <div className="sec-head" data-reveal>
               <div>
@@ -637,24 +704,17 @@ export default function HomePage({
             </div>
             <div className="bp-body" data-reveal>
             {practices.length ? (
-              <>
-                <div className="res-grid" id="bp-grid">
-                  {practices.map((r, i) => (
-                    <ResCard key={r.u || r.t} r={r} i={i} read="Read the practice note" external />
-                  ))}
-                </div>
-                <div className="sec-foot">
-                  <a
-                    className="btn btn-ghost btn-arrow"
-                    href={marketplaceViewAllUrl("best_practice")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    View all best practices
-                    <Arrow />
-                  </a>
-                </div>
-              </>
+              <ResSlider key={industry} items={practices} label="Best practice notes" read="Read the practice note">
+                <a
+                  className="btn btn-ghost btn-arrow"
+                  href={marketplaceViewAllUrl("best_practice")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View all best practices
+                  <Arrow />
+                </a>
+              </ResSlider>
             ) : (
               <div className="bp-empty">
                 <span className="bp-empty-ic" aria-hidden="true">
@@ -677,6 +737,31 @@ export default function HomePage({
                 </a>
               </div>
             )}
+            </div>
+          </div>
+        </section>
+
+        {/* ============ FAQ ============ */}
+        <section id="faq" aria-labelledby="faq-title">
+          <div className="wrap faq-grid">
+            <div className="faq-intro" data-reveal>
+              <p className="label">Questions</p>
+              <h2 id="faq-title">What leaders usually ask first.</h2>
+              <p className="lede">Something else on your mind? Call the team on +91 76766 46518.</p>
+              <div style={{ marginTop: 28 }}>
+                <a className="btn btn-primary" href="https://platform.ollacademy.com/signup">Assess your readiness</a>
+              </div>
+            </div>
+            <div className="faq" id="faqlist">
+              {faqs.map((f, i) => (
+                <details key={f.q}>
+                  <summary>
+                    <span className="faq-n" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+                    <span>{f.q}</span>
+                  </summary>
+                  <FaqBody parts={f.parts} />
+                </details>
+              ))}
             </div>
           </div>
         </section>

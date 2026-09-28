@@ -42,8 +42,8 @@ function normalizeIndustry(value?: string | string[]): IndustryKey {
 
 async function loadMarketplaceForIndustry(industry: IndustryKey) {
   const [researchRes, practicesRes, casesRes] = await Promise.all([
-    fetchHomeMarketplaceSection(industry, "research_synopsis", 3),
-    fetchHomeMarketplaceSection(industry, "best_practice", 3),
+    fetchHomeMarketplaceSection(industry, "research_synopsis", 9),
+    fetchHomeMarketplaceSection(industry, "best_practice", 9),
     fetchHomeMarketplaceSection(industry, "case_study", 3),
   ]);
 

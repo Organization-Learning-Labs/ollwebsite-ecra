@@ -23,8 +23,8 @@ export type Industry = {
 
 export const IND: Record<IndustryKey, Industry> = {
   it: {
-    short: "technology services",
-    name: "Technology and IT",
+    short: "IT services and consulting",
+    name: "IT Services and Consulting",
     hero: {
       h1: "Your next growth model may demand a different kind of IT services organization.",
       intro:
