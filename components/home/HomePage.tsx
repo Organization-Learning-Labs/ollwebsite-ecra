@@ -587,6 +587,29 @@ export default function HomePage({
 
         {/* ============ STATEMENT BAND ============ */}
         <section className="oll-band" aria-label="How OLL research informs the assessment" data-reveal>
+          <div className="band-fx" aria-hidden="true">
+            <span className="band-grid" />
+            <span className="band-scan" />
+            <svg className="band-net" viewBox="0 0 170 70">
+              <g className="band-net-links">
+                <path d="M10 54L46 32L88 46L128 16L160 40" />
+                <path d="M46 32L68 10L128 16" />
+                <path d="M88 46L160 40" />
+              </g>
+              {[[10, 54], [46, 32], [88, 46], [128, 16], [68, 10], [160, 40]].map(([cx, cy], i) => (
+                <circle key={i} className="band-net-node" cx={cx} cy={cy} r={i === 3 ? 6 : 4} style={{ "--i": i } as CSSProperties} />
+              ))}
+            </svg>
+            <span className="band-radar">
+              <span className="band-radar-sweep" />
+              <span className="band-radar-blip" />
+            </span>
+            <span className="band-bars">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <span key={i} style={{ "--i": i } as CSSProperties} />
+              ))}
+            </span>
+          </div>
           <div className="wrap">
             <p>
               <SplitWords text={statement} highlight="Enterprise Capability Readiness Assessment (ECRA)" />
