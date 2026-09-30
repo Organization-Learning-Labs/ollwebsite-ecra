@@ -409,14 +409,17 @@ function buildPilotLandingMessages(track: OutreachTrackPayload): ChatMessage[] {
   const name = track.executive_name?.trim();
   const company = track.company?.trim();
   const campaignTitle = track.campaign_title?.trim();
+  const customWelcome = track.landing_welcome_message?.trim();
 
-  let greeting = "You've been invited to OLL's diagnostic pilot.";
-  if (name && campaignTitle && company) {
-    greeting = `Hi ${name}, ${campaignTitle} is ready for ${company}.`;
-  } else if (name && company) {
-    greeting = `Hi ${name}, welcome to the OLL diagnostic pilot for ${company}.`;
-  } else if (name) {
-    greeting = `Hi ${name}, welcome to the OLL diagnostic pilot.`;
+  let greeting = customWelcome || "You've been invited to OLL's diagnostic pilot.";
+  if (!customWelcome) {
+    if (name && campaignTitle && company) {
+      greeting = `Hi ${name}, ${campaignTitle} is ready for ${company}.`;
+    } else if (name && company) {
+      greeting = `Hi ${name}, welcome to the OLL diagnostic pilot for ${company}.`;
+    } else if (name) {
+      greeting = `Hi ${name}, welcome to the OLL diagnostic pilot.`;
+    }
   }
 
   return [
