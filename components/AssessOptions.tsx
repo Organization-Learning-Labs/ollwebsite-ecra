@@ -1,6 +1,5 @@
 import { LevelIcon } from "@/components/ecra/LevelIcon";
 import { assessmentSignups } from "@/data/ecra";
-import { siteConfig } from "@/lib/site";
 
 type AssessOptionsProps = {
   className?: string;
@@ -16,7 +15,7 @@ export function AssessOptions({ className = "assess-opts", asMenu, onPick }: Ass
       {assessmentSignups.map((a) => (
         <a
           key={a.slug}
-          href={siteConfig.platform.signup}
+          href={a.signin}
           data-level={a.slug}
           role={asMenu ? "menuitem" : undefined}
           onClick={onPick}

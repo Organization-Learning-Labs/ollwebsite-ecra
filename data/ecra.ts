@@ -326,8 +326,30 @@ const SIGNUP_LINES: Record<LevelSlug, string> = {
   "leaders-roles": "Role-specific competence and a Development Action Plan",
 };
 
+const ORG_AUTH = {
+  signin: "https://admin.ollacademy.com/auth/signin",
+  signup: "https://admin.ollacademy.com/auth/orgSignup",
+};
+const INDIVIDUAL_AUTH = {
+  signin: "https://platform.ollacademy.com/login",
+  signup: "https://platform.ollacademy.com/signup",
+};
+
+/** Organization-level assessments use the admin portal; Leaders / Roles uses the learner platform. */
+const SIGNUP_AUTH: Record<LevelSlug, { signin: string; signup: string }> = {
+  enterprise: ORG_AUTH,
+  "business-unit": ORG_AUTH,
+  "function-capability-area": ORG_AUTH,
+  "leaders-roles": INDIVIDUAL_AUTH,
+};
+
 /** The four assessments offered at signup, in level order. */
-export const assessmentSignups = ecraLevels.map((l) => ({ slug: l.slug, title: l.title, line: SIGNUP_LINES[l.slug] }));
+export const assessmentSignups = ecraLevels.map((l) => ({
+  slug: l.slug,
+  title: l.title,
+  line: SIGNUP_LINES[l.slug],
+  ...SIGNUP_AUTH[l.slug],
+}));
 
 export function ecraLevel(slug: LevelSlug): EcraLevel {
   const found = ecraLevels.find((l) => l.slug === slug);

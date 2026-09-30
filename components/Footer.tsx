@@ -3,8 +3,6 @@ import Logo from "@/components/Logo";
 import { assessmentSignups } from "@/data/ecra";
 import { siteConfig } from "@/lib/site";
 
-const PLATFORM_URL = "https://platform.ollacademy.com/";
-
 export default function Footer() {
   return (
     <footer>
@@ -49,7 +47,7 @@ export default function Footer() {
             <ul>
               {assessmentSignups.map((a) => (
                 <li key={a.slug}>
-                  <a href={PLATFORM_URL}>
+                  <a href={a.signup}>
                     {a.title}
                     <small>{a.line}</small>
                   </a>
