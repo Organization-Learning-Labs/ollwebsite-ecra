@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 import JsonLd from "@/components/JsonLd";
 import { ContactForm } from "@/components/contact/ContactForm";
+import { SocialLinks } from "@/components/SocialLinks";
 import { StoryCta } from "@/components/story/StoryCta";
 import { StoryHead } from "@/components/story/StoryHead";
 import { StoryHero } from "@/components/story/StoryHero";
@@ -79,6 +80,11 @@ export default function ContactPage() {
                 </li>
               ))}
             </ul>
+            <div className="contact-social" data-reveal="up">
+              <span className="contact-card-k">Follow OLL</span>
+              <p>Research insights, capability perspectives and updates from The Organization Learning Labs.</p>
+              <SocialLinks labelled />
+            </div>
           </aside>
           <div className="contact-form-card" data-reveal="up">
             <h2>Send us a message</h2>

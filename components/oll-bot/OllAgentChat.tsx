@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Send, X, Bot, Maximize2, Minimize2 } from 'lucide-react';
+import { Send, X, Maximize2, Minimize2 } from 'lucide-react';
 import { ollBotQuestions } from '@/lib/oll-bot/questions';
 import type { AgentChatReply, AgentHistoryItem } from '@/lib/oll-bot/agents';
 import { BotMessageContent } from '@/components/oll-bot/BotMessageContent';
@@ -449,15 +449,17 @@ export type OllAgentChatProps = {
   hideLauncher?: boolean;
 };
 
-function AssistantAvatar() {
+function BrandMark({ className }: { className: string }) {
   return (
-    <div
-      className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E8F0FE]"
-      aria-hidden
-    >
-      <Bot className="h-5 w-5 text-primary-600" strokeWidth={2} />
-    </div>
+    <span className={className} aria-hidden>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/favicon.png" alt="" />
+    </span>
   );
+}
+
+function AssistantAvatar() {
+  return <BrandMark className="oll-avatar" />;
 }
 
 function StreamingBubble({
@@ -470,7 +472,7 @@ function StreamingBubble({
   return (
     <div className="oll-msg-in flex items-end gap-2.5">
       <AssistantAvatar />
-      <div className="max-w-[85%] rounded-2xl rounded-bl-md bg-[#EEF2F7] px-4 py-3 text-[14px] leading-relaxed break-words text-[#1E293B]">
+      <div className="oll-bubble oll-bubble--bot max-w-[85%] px-4 py-3 text-[14px] leading-relaxed break-words">
         {isReply ? (
           <BotMessageContent text={text} variant="assistant" />
         ) : (
@@ -1251,7 +1253,8 @@ export function OllAgentChat({
             animation: oll-online-pulse 2s ease-in-out infinite;
           }
           .oll-agent-chat .oll-panel-enter {
-            animation: oll-panel-in 220ms var(--oll-ease) both;
+            animation: oll-panel-in 460ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+            transform-origin: bottom right;
           }
           .oll-agent-chat .oll-panel-exit {
             animation: oll-panel-out 160ms ease-in both;
@@ -1289,7 +1292,7 @@ export function OllAgentChat({
           50% { opacity: 0.55; transform: scale(0.85); }
         }
         @keyframes oll-panel-in {
-          from { opacity: 0; transform: translateY(12px) scale(0.96); }
+          from { opacity: 0; transform: translateY(18px) scale(0.94); }
           to { opacity: 1; transform: translateY(0) scale(1); }
         }
         @keyframes oll-panel-out {
@@ -1317,19 +1320,30 @@ export function OllAgentChat({
           aria-label={isPilotRoom ? 'The Organization Learning Labs Diagnostic Pilot' : 'The Organization Learning Labs Executive Advisor'}
           aria-modal={isPilotRoom ? undefined : true}
         >
-          {!isPilotRoom ? (
+          {isPilotRoom ? (
+            <header className="oll-chat-header oll-chat-header--pilot">
+              <div className="oll-chat-id">
+                <BrandMark className="oll-chat-mark" />
+                <div className="oll-chat-id-text">
+                  <p className="oll-chat-title">Diagnostic Pilot</p>
+                  <p className="oll-chat-sub">
+                    <span className="oll-online-dot" aria-hidden />
+                    The Organization Learning Labs
+                  </p>
+                </div>
+              </div>
+            </header>
+          ) : (
             <header className="oll-chat-header">
-              <div className="flex min-w-0 items-center gap-2.5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/academy-white.svg"
-                  alt=""
-                  className="h-7 w-7 object-contain"
-                  aria-hidden
-                />
-                <p className="text-[17px] font-bold leading-none tracking-tight text-white">
-                  The Organization Learning Labs<span className="text-secondary-400">.</span>
-                </p>
+              <div className="oll-chat-id">
+                <BrandMark className="oll-chat-mark" />
+                <div className="oll-chat-id-text">
+                  <p className="oll-chat-title">The Organization Learning Labs</p>
+                  <p className="oll-chat-sub">
+                    <span className="oll-online-dot" aria-hidden />
+                    Ollie, your readiness guide
+                  </p>
+                </div>
               </div>
               <div className="flex shrink-0 items-center gap-0.5">
                 <button
@@ -1348,7 +1362,7 @@ export function OllAgentChat({
                 </button>
               </div>
             </header>
-          ) : null}
+          )}
 
           <div
             ref={scrollRef}
@@ -1391,10 +1405,8 @@ export function OllAgentChat({
                     >
                       {!isUser && <AssistantAvatar />}
                       <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-3 text-[14px] leading-relaxed break-words ${
-                          isUser
-                            ? 'rounded-br-md bg-primary-600 text-white whitespace-pre-wrap'
-                            : 'rounded-bl-md bg-[#EEF2F7] text-[#1E293B]'
+                        className={`oll-bubble max-w-[85%] px-4 py-3 text-[14px] leading-relaxed break-words ${
+                          isUser ? 'oll-bubble--user whitespace-pre-wrap' : 'oll-bubble--bot'
                         }`}
                       >
                         <BotMessageContent
@@ -1518,13 +1530,7 @@ export function OllAgentChat({
             {open || panelMounted || hideLauncher ? (
               <X className="relative h-6 w-6 text-white" strokeWidth={2.25} />
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src="/academy-white.svg"
-                alt=""
-                className="relative h-7 w-7 object-contain transition group-hover:scale-110"
-                aria-hidden
-              />
+              <BrandMark className="oll-launcher-mark" />
             )}
           </button>
         </div>

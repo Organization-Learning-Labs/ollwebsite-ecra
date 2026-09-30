@@ -18,7 +18,11 @@ export const siteConfig = {
     contact: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@ollacademy.com",
   },
   social: {
-    // Add profiles when available for sameAs / Open Graph
+    linkedin: "https://www.linkedin.com/company/the-organization-learning-labs",
+    x: "https://x.com/OrgLearningLab",
+    facebook: "https://www.facebook.com/theorganizationlearninglabs/",
+    youtube: "https://www.youtube.com/@TheOrganizationLearningLabs",
+    instagram: "https://www.instagram.com/the_organization_learning_labs/",
   },
   platform: {
     signup: "https://platform.ollacademy.com/signup",
