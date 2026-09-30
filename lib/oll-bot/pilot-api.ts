@@ -49,7 +49,9 @@ export type OutreachTrackPayload = {
   executive_job_title?: string;
   company?: string;
   industry?: string;
+  sub_industry?: string;
   campaign_title?: string;
+  landing_welcome_message?: string;
 };
 
 function pickString(...values: unknown[]): string | undefined {
@@ -94,7 +96,9 @@ export function parseOutreachTrackResponse(data: unknown): OutreachTrackPayload 
       executive.organization_name
     ),
     industry: pickString(payload.industry, executive.industry),
+    sub_industry: pickString(payload.sub_industry, executive.sub_industry),
     campaign_title: pickString(payload.campaign_title, payload.campaign),
+    landing_welcome_message: pickString(payload.landing_welcome_message),
   };
 }
 
