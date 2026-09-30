@@ -300,9 +300,6 @@ export default function Header() {
             >
               <p className="signup-head">Start at the level you decide at</p>
               <AssessOptions asMenu onPick={() => signup.setOpen(false)} />
-              <div className="signup-foot">
-                <span className="flag">Four signup URLs to be supplied</span>
-              </div>
             </div>
           </div>
           <button
