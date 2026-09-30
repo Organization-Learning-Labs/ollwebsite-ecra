@@ -1,6 +1,7 @@
 /**
- * Thin server-side client for GET /content/marketplace.
- * Mirrors the academy app's category → content_type mapping without axios/auth.
+ * Server-side client for homepage marketplace content.
+ * Case studies and best practices: dedicated fetch endpoints with is_free filter.
+ * Research: GET /blogs/fetch/preview, filtered by industry on the server.
  */
 
 import type { CardItem, CaseStudy, IndustryKey } from "@/data/home";
@@ -29,7 +30,14 @@ const RESEARCH_SITE =
   process.env.NEXT_PUBLIC_RESEARCH_SITE_URL?.replace(/\/$/, "") ||
   "https://research.ollacademy.com";
 
-type RawMarketplaceItem = {
+type ImageSet = {
+  featured_image?: string;
+  square_image?: string;
+  portrait_image?: string;
+  other_images?: string[];
+};
+
+type RawContentItem = {
   id?: string;
   title?: string;
   description?: string;
@@ -40,16 +48,33 @@ type RawMarketplaceItem = {
   sub_industry?: string;
   content_type?: string;
   banner_image?: string;
-  images?: {
-    featured_image?: string;
-    square_image?: string;
-    portrait_image?: string;
-  };
+  images?: ImageSet;
+  images_res?: ImageSet;
   author?: Array<{ name?: string }> | { name?: string } | string;
   created_at?: string;
+  created_by?: string;
   created_by_name?: string;
+  publication_date?: string;
+  is_free?: boolean;
+  is_published?: boolean;
   metrics?: Array<{ value?: string; label?: string }>;
   outcomes?: Array<{ value?: string; label?: string }>;
+};
+
+const FREE_MARKETPLACE_PARAMS = { is_free: "true" } as const;
+
+type RawBlogPreview = {
+  blog_id?: string;
+  industry?: string;
+  published_at?: string;
+  description?: string;
+  slug?: string;
+  research_synopsis?: {
+    research_title?: string;
+    short_description?: string;
+    images?: ImageSet;
+    authors?: Array<{ name?: string }> | null;
+  };
 };
 
 function slugifyTitle(title: string): string {
@@ -63,7 +88,7 @@ function slugifyTitle(title: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function resolveAuthor(raw: RawMarketplaceItem["author"]): string {
+function resolveAuthor(raw: RawContentItem["author"]): string {
   if (!raw) return "Organization Learning Labs";
   if (typeof raw === "string" && raw.trim()) return raw.trim();
   if (Array.isArray(raw)) {
@@ -93,11 +118,14 @@ function truncate(text: string, max = 220): string {
   return `${t.slice(0, max).replace(/\s+\S*$/, "")}…`;
 }
 
-function bannerUrl(item: RawMarketplaceItem): string | undefined {
+function bannerUrl(item: RawContentItem): string | undefined {
   const candidates = [
     item.banner_image,
+    item.images_res?.featured_image,
     item.images?.featured_image,
+    item.images_res?.square_image,
     item.images?.square_image,
+    item.images_res?.portrait_image,
     item.images?.portrait_image,
   ];
   for (const raw of candidates) {
@@ -107,24 +135,36 @@ function bannerUrl(item: RawMarketplaceItem): string | undefined {
   return undefined;
 }
 
-function researchArticleUrl(item: RawMarketplaceItem): string {
+function matchesIndustry(itemIndustry: string | undefined, industry: IndustryKey): boolean {
+  const expected = MARKETPLACE_INDUSTRY[industry];
+  const actual = itemIndustry?.trim();
+  if (!actual || !expected) return false;
+  return actual.localeCompare(expected, undefined, { sensitivity: "accent" }) === 0;
+}
+
+/** Homepage only surfaces explicitly free marketplace content. */
+function isFreeMarketplaceItem(item: RawContentItem): boolean {
+  if (item.is_published === false) return false;
+  return item.is_free === true;
+}
+
+function researchArticleUrl(item: { slug?: string; title?: string; url?: string }): string {
   if (item.url?.trim()) return item.url.trim();
   const slug = item.slug?.trim() || (item.title ? slugifyTitle(item.title) : "");
   if (!slug) return `${RESEARCH_SITE}/research?type=internal`;
   return `${RESEARCH_SITE}/research/${encodeURIComponent(slug)}`;
 }
 
-function caseStudyUrl(item: RawMarketplaceItem): string {
+function caseStudyUrl(item: RawContentItem): string {
   if (item.url?.trim()) return item.url.trim();
+  const slug = item.slug?.trim() || (item.title ? slugifyTitle(item.title) : "");
+  if (slug) return `${RESEARCH_SITE}/case-studies/${encodeURIComponent(slug)}`;
   const id = item.id?.trim();
-  if (!id) return `${PLATFORM_SITE}/marketplace?contentCategory=case-studies`;
-  const slug = item.slug?.trim();
-  const q = new URLSearchParams({ id });
-  if (slug) q.set("slug", slug);
-  return `${PLATFORM_SITE}/marketplace/case-studies?${q.toString()}`;
+  if (!id) return `${RESEARCH_SITE}/case-studies`;
+  return `${RESEARCH_SITE}/case-studies?id=${encodeURIComponent(id)}`;
 }
 
-function bestPracticeUrl(item: RawMarketplaceItem): string {
+function bestPracticeUrl(item: RawContentItem): string {
   if (item.url?.trim()) return item.url.trim();
   const id = item.id?.trim();
   if (!id) return `${PLATFORM_SITE}/marketplace?contentCategory=best-practices`;
@@ -140,34 +180,85 @@ export function marketplaceViewAllUrl(contentType: MarketplaceContentType): stri
   return `${PLATFORM_SITE}/marketplace?contentCategory=${categoryMap[contentType]}`;
 }
 
-export async function fetchMarketplace(params: {
-  content_type: MarketplaceContentType;
-  industry: string;
-  page_size?: number;
-}): Promise<RawMarketplaceItem[]> {
+async function fetchApiList<T>(
+  path: string,
+  params?: Record<string, string>
+): Promise<T[]> {
   const base = getPilotApiBaseUrl();
-  const q = new URLSearchParams({
-    content_type: params.content_type,
-    industry: params.industry,
-    page: "1",
-    page_size: String(params.page_size ?? 3),
-  });
-
-  const res = await fetch(`${base}/content/marketplace?${q.toString()}`, {
+  const q = new URLSearchParams(params);
+  const suffix = q.size ? `?${q.toString()}` : "";
+  const res = await fetch(`${base}${path}${suffix}`, {
     headers: { Accept: "application/json" },
     next: { revalidate: 300 },
   });
 
   if (!res.ok) return [];
 
-  const payload = (await res.json().catch(() => ({}))) as {
-    data?: RawMarketplaceItem[];
-  };
+  const payload = (await res.json().catch(() => ({}))) as { data?: T[] };
   return Array.isArray(payload.data) ? payload.data : [];
 }
 
+/** Public: GET /case-studies/fetch?is_free=true */
+export async function fetchFreeCaseStudies(): Promise<RawContentItem[]> {
+  return fetchApiList<RawContentItem>("/case-studies/fetch", {
+    ...FREE_MARKETPLACE_PARAMS,
+    page_size: "50",
+  });
+}
+
+/** Only industry-matched free published case studies (no cross-industry backfill). */
+export function pickCaseStudiesForIndustry(
+  items: RawContentItem[],
+  industry: IndustryKey,
+  limit = 3
+): CaseStudy[] {
+  return items
+    .filter(isFreeMarketplaceItem)
+    .filter((item) => matchesIndustry(item.industry, industry))
+    .slice(0, limit)
+    .map(mapToCaseStudy);
+}
+
+/** Public: GET /best-practices/fetch?is_free=true */
+export async function fetchFreeBestPractices(): Promise<RawContentItem[]> {
+  return fetchApiList<RawContentItem>("/best-practices/fetch", {
+    ...FREE_MARKETPLACE_PARAMS,
+    page_size: "50",
+  });
+}
+
+export async function fetchResearchPreview(): Promise<RawBlogPreview[]> {
+  return fetchApiList<RawBlogPreview>("/blogs/fetch/preview", {
+    ...FREE_MARKETPLACE_PARAMS,
+    is_published: "true",
+    page_size: "50",
+  });
+}
+
+export function partitionResearchByIndustry(
+  items: RawBlogPreview[],
+  industry: IndustryKey,
+  limit = 9
+): CardItem[] {
+  return items
+    .filter((item) => matchesIndustry(item.industry, industry))
+    .slice(0, limit)
+    .map(mapBlogPreviewToCardItem);
+}
+
+export function partitionBestPracticesByIndustry(
+  items: RawContentItem[],
+  industry: IndustryKey,
+  limit = 9
+): CardItem[] {
+  return items
+    .filter((item) => isFreeMarketplaceItem(item) && matchesIndustry(item.industry, industry))
+    .slice(0, limit)
+    .map((item) => mapToCardItem(item, "best_practice"));
+}
+
 export function mapToCardItem(
-  item: RawMarketplaceItem,
+  item: RawContentItem,
   contentType: "research_synopsis" | "best_practice"
 ): CardItem {
   const tag =
@@ -181,18 +272,47 @@ export function mapToCardItem(
       ? researchArticleUrl(item)
       : bestPracticeUrl(item);
 
+  const authorName = resolveAuthor(item.author);
+  const by =
+    authorName !== "Organization Learning Labs"
+      ? authorName
+      : item.created_by?.trim() ||
+        item.created_by_name?.trim() ||
+        "Organization Learning Labs";
+
   return {
     tag,
     t: item.title?.trim() || "Untitled",
     d: truncate(item.description?.trim() || ""),
-    by: item.created_by_name?.trim() || resolveAuthor(item.author),
-    on: formatDate(item.created_at),
+    by,
+    on: formatDate(item.publication_date || item.created_at),
     u,
     img: bannerUrl(item),
   };
 }
 
-export function mapToCaseStudy(item: RawMarketplaceItem): CaseStudy {
+function mapBlogPreviewToCardItem(item: RawBlogPreview): CardItem {
+  const synopsis = item.research_synopsis;
+  const title = synopsis?.research_title?.trim() || "Untitled";
+  const authors = synopsis?.authors;
+
+  let by = "Organization Learning Labs";
+  if (Array.isArray(authors) && authors[0]?.name?.trim()) {
+    by = authors[0].name.trim();
+  }
+
+  return {
+    tag: item.industry?.trim() || "OLL",
+    t: title,
+    d: truncate(synopsis?.short_description?.trim() || item.description?.trim() || ""),
+    by,
+    on: formatDate(item.published_at),
+    u: researchArticleUrl({ slug: item.slug, title }),
+    img: synopsis?.images?.featured_image?.trim() || undefined,
+  };
+}
+
+export function mapToCaseStudy(item: RawContentItem): CaseStudy {
   const metrics = item.metrics ?? item.outcomes ?? [];
   const m1 = metrics[0]?.value?.trim();
   const l1 = metrics[0]?.label?.trim();
@@ -210,29 +330,40 @@ export function mapToCaseStudy(item: RawMarketplaceItem): CaseStudy {
   };
 }
 
+export type MarketplaceFetchSource = "live" | "fallback";
+
 export async function fetchHomeMarketplaceSection(
   industry: IndustryKey,
   contentType: MarketplaceContentType,
   limit = 3
-): Promise<{ items: CardItem[] | CaseStudy[]; live: boolean }> {
+): Promise<{ items: CardItem[] | CaseStudy[]; source: MarketplaceFetchSource }> {
   try {
-    const raw = await fetchMarketplace({
-      content_type: contentType,
-      industry: MARKETPLACE_INDUSTRY[industry],
-      page_size: limit,
-    });
-    if (raw.length === 0) return { items: [], live: false };
-
     if (contentType === "case_study") {
-      return { items: raw.map(mapToCaseStudy), live: true };
+      const raw = await fetchFreeCaseStudies();
+      return {
+        items: pickCaseStudiesForIndustry(raw, industry, limit),
+        source: "live",
+      };
     }
+
+    if (contentType === "best_practice") {
+      const raw = (await fetchFreeBestPractices())
+        .filter((item) => isFreeMarketplaceItem(item) && matchesIndustry(item.industry, industry))
+        .slice(0, limit);
+      return {
+        items: raw.map((item) => mapToCardItem(item, "best_practice")),
+        source: "live",
+      };
+    }
+
+    const raw = (await fetchResearchPreview())
+      .filter((item) => matchesIndustry(item.industry, industry))
+      .slice(0, limit);
     return {
-      items: raw.map((item) =>
-        mapToCardItem(item, contentType as "research_synopsis" | "best_practice")
-      ),
-      live: true,
+      items: raw.map(mapBlogPreviewToCardItem),
+      source: "live",
     };
   } catch {
-    return { items: [], live: false };
+    return { items: [], source: "fallback" };
   }
 }
