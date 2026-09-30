@@ -778,7 +778,7 @@ export default function HomePage({
             <div className="sec-head" data-reveal>
               <div>
                 <p className="label">Best practices</p>
-                <h2 id="bp-title">What works, tested over time in <span data-ind-short="">{d.short}</span></h2>
+                <h2 id="bp-title">What works, tested over time in <br className="bp-br" /><span data-ind-short="">{d.short}</span></h2>
                 <p className="lede">
                   Proven methods, techniques and frameworks that hold up in practice, written for the leaders who have to run them.
                 </p>

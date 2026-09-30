@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { SocialLinks } from "@/components/SocialLinks";
 import { assessmentSignups } from "@/data/ecra";
 import { siteConfig } from "@/lib/site";
 
@@ -58,7 +59,8 @@ export default function Footer() {
         </div>
         <div className="foot-small">
           <span>© 2026 The Organization Learning Labs LLP</span>
-          <span>
+          <SocialLinks />
+          <span className="foot-legal">
             <Link href="/privacy">Privacy policy</Link> &nbsp; <Link href="/terms">Terms</Link>
           </span>
         </div>
