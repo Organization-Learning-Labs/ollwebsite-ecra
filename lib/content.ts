@@ -1,6 +1,6 @@
 /**
  * Server-side content loaders.
- * Marketplace card sections load from GET /content/marketplace with local fallback.
+ * Marketplace sections load from case-studies, best-practices, and blogs preview APIs.
  */
 
 import {
@@ -8,12 +8,18 @@ import {
   HERO_IMAGES,
   IND,
   OLL_STATEMENT,
-  RESEARCH,
   type CardItem,
   type CaseStudy,
   type IndustryKey,
 } from "@/data/home";
-import { fetchHomeMarketplaceSection } from "@/lib/marketplace";
+import {
+  fetchFreeBestPractices,
+  fetchFreeCaseStudies,
+  fetchResearchPreview,
+  partitionBestPracticesByIndustry,
+  partitionResearchByIndustry,
+  pickCaseStudiesForIndustry,
+} from "@/lib/marketplace";
 
 export type ContentSource = "live" | "fallback";
 
@@ -40,22 +46,32 @@ function normalizeIndustry(value?: string | string[]): IndustryKey {
   return v === "bfsi" ? "bfsi" : "it";
 }
 
-async function loadMarketplaceForIndustry(industry: IndustryKey) {
-  const [researchRes, practicesRes, casesRes] = await Promise.all([
-    fetchHomeMarketplaceSection(industry, "research_synopsis", 9),
-    fetchHomeMarketplaceSection(industry, "best_practice", 9),
-    fetchHomeMarketplaceSection(industry, "case_study", 3),
-  ]);
+function buildIndustryContent(
+  key: IndustryKey,
+  live: {
+    freeCaseStudies: Awaited<ReturnType<typeof fetchFreeCaseStudies>>;
+    researchPreview: Awaited<ReturnType<typeof fetchResearchPreview>>;
+    bestPractices: Awaited<ReturnType<typeof fetchFreeBestPractices>>;
+  } | null
+) {
+  if (!live) {
+    return {
+      research: [] as CardItem[],
+      researchSource: "fallback" as const,
+      practices: [] as CardItem[],
+      practicesSource: "fallback" as const,
+      cases: [] as CaseStudy[],
+      casesSource: "fallback" as const,
+    };
+  }
 
   return {
-    research: researchRes.live
-      ? (researchRes.items as CardItem[])
-      : (RESEARCH[industry] ?? RESEARCH.all).slice(0, 3),
-    researchSource: researchRes.live ? ("live" as const) : ("fallback" as const),
-    practices: practicesRes.live ? (practicesRes.items as CardItem[]) : [],
-    practicesSource: practicesRes.live ? ("live" as const) : ("fallback" as const),
-    cases: casesRes.live ? (casesRes.items as CaseStudy[]) : [],
-    casesSource: casesRes.live ? ("live" as const) : ("fallback" as const),
+    research: partitionResearchByIndustry(live.researchPreview, key, 9),
+    researchSource: "live" as const,
+    practices: partitionBestPracticesByIndustry(live.bestPractices, key, 9),
+    practicesSource: "live" as const,
+    cases: pickCaseStudiesForIndustry(live.freeCaseStudies, key, 3),
+    casesSource: "live" as const,
   };
 }
 
@@ -63,12 +79,22 @@ async function loadMarketplaceForIndustry(industry: IndustryKey) {
 export async function getHomeContent(industryParam?: string | string[]): Promise<HomeContent> {
   const industry = normalizeIndustry(industryParam);
 
-  const loaded = await Promise.all(
-    INDUSTRY_KEYS.map(async (key) => ({
-      key,
-      ...(await loadMarketplaceForIndustry(key)),
-    }))
-  );
+  let live: {
+    freeCaseStudies: Awaited<ReturnType<typeof fetchFreeCaseStudies>>;
+    researchPreview: Awaited<ReturnType<typeof fetchResearchPreview>>;
+    bestPractices: Awaited<ReturnType<typeof fetchFreeBestPractices>>;
+  } | null = null;
+
+  try {
+    const [freeCaseStudies, researchPreview, bestPractices] = await Promise.all([
+      fetchFreeCaseStudies(),
+      fetchResearchPreview(),
+      fetchFreeBestPractices(),
+    ]);
+    live = { freeCaseStudies, researchPreview, bestPractices };
+  } catch {
+    live = null;
+  }
 
   const research: Record<IndustryKey, CardItem[]> = { it: [], bfsi: [] };
   const practices: Record<IndustryKey, CardItem[]> = { it: [], bfsi: [] };
@@ -79,13 +105,14 @@ export async function getHomeContent(industryParam?: string | string[]): Promise
     cases: { it: "fallback" as ContentSource, bfsi: "fallback" as ContentSource },
   };
 
-  for (const row of loaded) {
-    research[row.key] = row.research;
-    practices[row.key] = row.practices;
-    cases[row.key] = row.cases;
-    contentSource.research[row.key] = row.researchSource;
-    contentSource.practices[row.key] = row.practicesSource;
-    contentSource.cases[row.key] = row.casesSource;
+  for (const key of INDUSTRY_KEYS) {
+    const row = buildIndustryContent(key, live);
+    research[key] = row.research;
+    practices[key] = row.practices;
+    cases[key] = row.cases;
+    contentSource.research[key] = row.researchSource;
+    contentSource.practices[key] = row.practicesSource;
+    contentSource.cases[key] = row.casesSource;
   }
 
   return {
@@ -94,7 +121,12 @@ export async function getHomeContent(industryParam?: string | string[]): Promise
     statement: OLL_STATEMENT,
     faqs: FAQS,
     practices,
-    research: { ...research, all: research.it.length ? research.it : RESEARCH.all },
+    research: {
+      ...research,
+      all: [...research.it, ...research.bfsi].filter(
+        (item, index, arr) => arr.findIndex((x) => x.u === item.u) === index
+      ),
+    },
     cases,
     heroImages: HERO_IMAGES,
     contentSource,

@@ -192,8 +192,12 @@ footer .oll-logo{height:84px;width:233px;margin-bottom:18px;}
 .cbtn:hover{border-color:#fff;background:rgba(255,255,255,.14);}
 .cbtn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;}
 .case-stack{position:relative;}
-.case{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .45s ease;background:rgba(255,255,255,.96);color:#12233B;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 30px 70px -25px rgba(0,0,0,.6);}
+.case{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .45s ease,transform .45s ease,box-shadow .45s ease;background:rgba(255,255,255,.96);color:#12233B;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 30px 70px -25px rgba(0,0,0,.6);}
 .case.on{position:relative;opacity:1;visibility:visible;}
+.case-link{display:block;height:100%;color:inherit;text-decoration:none;cursor:pointer;}
+.case-link:focus-visible{outline:2px solid var(--amber-bright);outline-offset:3px;border-radius:var(--radius-lg);}
+.case.on:hover,.case.on:focus-within{transform:translateY(-2px);box-shadow:0 34px 78px -24px rgba(0,0,0,.68);}
+.case-link:hover h3,.case-link:focus-visible h3{color:#004F96;}
 .case-dots{display:flex;gap:6px;justify-content:center;margin-top:14px;flex-wrap:wrap;}
 .case-dots button{width:22px;height:4px;border-radius:99px;border:0;background:rgba(255,255,255,.28);padding:0;}
 .case-dots button[aria-selected="true"]{background:var(--amber-bright);width:30px;}
@@ -207,7 +211,10 @@ footer .oll-logo{height:84px;width:233px;margin-bottom:18px;}
 .case-out div{border:1px solid #E3E9F1;border-radius:var(--radius-sm);padding:10px 12px;}
 .case-out b{display:block;font-size:20px;font-weight:900;color:#12233B;}
 .case-out span{font-size:12px;color:#5B6B80;font-weight:600;}
-.case .textlink{display:inline-block;margin-top:18px;color:#004F96;}
+.case-read{display:inline-flex;align-items:center;gap:6px;margin-top:18px;font-weight:700;font-size:15px;color:#004F96;border-bottom:1.5px solid currentColor;padding-bottom:1px;}
+.case-read svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .2s ease;}
+.case-link:hover .case-read,.case-link:focus-visible .case-read{color:var(--blue-hover);}
+.case-link:hover .case-read svg,.case-link:focus-visible .case-read svg{transform:translateX(3px);}
 .case .flag{margin-top:12px;}
 .case-body{padding-bottom:20px;}
 

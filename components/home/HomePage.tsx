@@ -115,6 +115,13 @@ function ResSlider({
   }, []);
 
   useEffect(() => {
+    const track = trackRef.current;
+    track?.scrollTo({ left: 0, behavior: "auto" });
+    setPos(0);
+    measure();
+  }, [measure, items]);
+
+  useEffect(() => {
     measure();
     const track = trackRef.current;
     if (!track) return;
@@ -252,12 +259,36 @@ export default function HomePage({
   const [caseNonce, setCaseNonce] = useState(0);
   const [reduceMotion, setReduceMotion] = useState(false);
 
+  useEffect(() => {
+    setIndustryState(initialIndustry);
+    setCaseIdx(0);
+    setCaseNonce((n) => n + 1);
+  }, [initialIndustry]);
+
+  useEffect(() => {
+    const syncIndustryFromUrl = () => {
+      try {
+        const ind =
+          new URLSearchParams(window.location.search).get("industry") === "bfsi"
+            ? "bfsi"
+            : "it";
+        setIndustryState(ind);
+        setCaseIdx(0);
+        setCaseNonce((n) => n + 1);
+      } catch {
+        // ignore malformed URLs
+      }
+    };
+    window.addEventListener("popstate", syncIndustryFromUrl);
+    return () => window.removeEventListener("popstate", syncIndustryFromUrl);
+  }, []);
+
   const heroRef = useRef<HTMLElement>(null);
   const stabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const d = IND[industry];
   const cases = CASES[industry] ?? [];
-  const research = RESEARCH[industry]?.length ? RESEARCH[industry] : RESEARCH.all;
+  const research = RESEARCH[industry] ?? [];
   const practices = PRACTICES[industry] ?? [];
   const liveResearch = contentSource.research[industry] === "live";
 
@@ -444,6 +475,7 @@ export default function HomePage({
               {/* Case study cards */}
               <div>
                 <div
+                  key={industry}
                   className="case-deck"
                   id="case-deck"
                   onMouseEnter={() => setCaseHold(true)}
@@ -480,47 +512,72 @@ export default function HomePage({
                     ) : null}
                   </div>
                   {cases.length === 0 ? (
-                    <p className="case-empty">No case studies are available for this industry yet.</p>
+                    <p className="case-empty">
+                      No published free case studies for {d.short} yet. Mark them Free + Published in admin with industry &ldquo;{industry === "it" ? "Information Technology" : "Banking, Financial Service And Insurance"}&rdquo;.
+                    </p>
                   ) : (
                   <div className="case-stack" id="case-stack" aria-live="polite">
                     {cases.map((c, i) => (
                       <article key={`${industry}-${i}`} className={`case${i === caseIdx ? " on" : ""}`}>
-                        <div className={`case-img${c.img ? " loaded" : ""}`}>
-                          {c.img ? (
-                            <img src={c.img} alt="" loading="lazy" decoding="async" />
-                          ) : (
-                            <>
-                              Case study image
-                              <br />
-                              1600&times;900
-                            </>
-                          )}
-                        </div>
-                        <div className="case-body">
-                          <div className="case-tag">Case study &middot; {c.tag}</div>
-                          <h3>{c.t}</h3>
-                          <p>{c.d}</p>
-                          {caseHasMetrics(c) ? (
-                            <div className="case-out">
-                              {c.m1 && c.l1 ? (
-                                <div><b>{c.m1}</b><span>{c.l1}</span></div>
-                              ) : null}
-                              {c.m2 && c.l2 ? (
-                                <div><b>{c.m2}</b><span>{c.l2}</span></div>
-                              ) : null}
+                        {c.u ? (
+                          <a
+                            className="case-link"
+                            href={c.u}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Read case study: ${c.t}`}
+                          >
+                            <div className={`case-img${c.img ? " loaded" : ""}`}>
+                              {c.img ? (
+                                <img src={c.img} alt="" loading="lazy" decoding="async" />
+                              ) : (
+                                <>
+                                  Case study image
+                                  <br />
+                                  1600&times;900
+                                </>
+                              )}
                             </div>
-                          ) : null}
-                          {c.u ? (
-                            <a
-                              className="textlink"
-                              href={c.u}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Read the case study
-                            </a>
-                          ) : null}
-                        </div>
+                            <div className="case-body">
+                              <div className="case-tag">Case study &middot; {c.tag}</div>
+                              <h3>{c.t}</h3>
+                              <p>{c.d}</p>
+                              {caseHasMetrics(c) ? (
+                                <div className="case-out">
+                                  {c.m1 && c.l1 ? (
+                                    <div><b>{c.m1}</b><span>{c.l1}</span></div>
+                                  ) : null}
+                                  {c.m2 && c.l2 ? (
+                                    <div><b>{c.m2}</b><span>{c.l2}</span></div>
+                                  ) : null}
+                                </div>
+                              ) : null}
+                              <span className="case-read">
+                                Read the case study
+                                <Arrow />
+                              </span>
+                            </div>
+                          </a>
+                        ) : (
+                          <>
+                            <div className={`case-img${c.img ? " loaded" : ""}`}>
+                              {c.img ? (
+                                <img src={c.img} alt="" loading="lazy" decoding="async" />
+                              ) : (
+                                <>
+                                  Case study image
+                                  <br />
+                                  1600&times;900
+                                </>
+                              )}
+                            </div>
+                            <div className="case-body">
+                              <div className="case-tag">Case study &middot; {c.tag}</div>
+                              <h3>{c.t}</h3>
+                              <p>{c.d}</p>
+                            </div>
+                          </>
+                        )}
                       </article>
                     ))}
                   </div>
