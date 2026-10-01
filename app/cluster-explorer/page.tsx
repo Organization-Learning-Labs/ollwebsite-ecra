@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import "./cluster-explorer.css";
 import { ClusterExplorer } from "@/components/clusters/ClusterExplorer";
+import { PasswordGate } from "@/components/clusters/PasswordGate";
 import { StoryCta } from "@/components/story/StoryCta";
 import { StoryHero } from "@/components/story/StoryHero";
 import { StoryMotion } from "@/components/story/StoryMotion";
+import { ACCESS_PATH, hasAccess } from "@/lib/clusters/access";
+import { getExplorerData } from "@/lib/clusters/source";
 import { siteConfig } from "@/lib/site";
 
 const NOINDEX = { index: false, follow: false, nocache: true } as const;
@@ -16,7 +19,25 @@ export const metadata: Metadata = {
   alternates: { canonical: null },
 };
 
-export default function ClusterExplorerPage() {
+type PageProps = { searchParams: Promise<Record<string, string | string[] | undefined>> };
+
+export default async function ClusterExplorerPage({ searchParams }: PageProps) {
+  if (!(await hasAccess())) {
+    const query = new URLSearchParams();
+    for (const [k, v] of Object.entries(await searchParams)) {
+      if (typeof v === "string") query.set(k, v);
+    }
+    const qs = query.toString();
+    return (
+      <main id="main">
+        <StoryMotion />
+        <PasswordGate next={qs ? `${ACCESS_PATH}?${qs}` : ACCESS_PATH} />
+      </main>
+    );
+  }
+
+  const data = await getExplorerData();
+
   return (
     <main id="main">
       <StoryMotion />
@@ -30,7 +51,7 @@ export default function ClusterExplorerPage() {
       <section className="cx-sec">
         <div className="wrap">
           <Suspense fallback={null}>
-            <ClusterExplorer />
+            <ClusterExplorer data={data} />
           </Suspense>
         </div>
       </section>
