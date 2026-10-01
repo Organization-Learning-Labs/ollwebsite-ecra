@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
         missing: [{ type: "host", value: hostPattern }],
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
       },
+      {
+        source: "/dap-report",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }],
+      },
     ];
   },
   images: {

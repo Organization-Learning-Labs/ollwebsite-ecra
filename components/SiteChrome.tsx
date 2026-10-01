@@ -10,6 +10,8 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isPilot = pathname?.startsWith('/pilot');
 
+  const isDapReport = pathname?.startsWith('/dap-report');
+
   if (isPilot) {
     return <>{children}</>;
   }
@@ -19,8 +21,12 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       <Header />
       {children}
       <Footer />
-      <BotShellGate />
-      <Ollie />
+      {isDapReport ? null : (
+        <>
+          <BotShellGate />
+          <Ollie />
+        </>
+      )}
     </>
   );
 }
