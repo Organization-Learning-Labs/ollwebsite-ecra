@@ -7,14 +7,28 @@ export const siteConfig = {
   name: "The Organization Learning Labs",
   shortName: "OLL",
   legalName: "The Organization Learning Labs LLP",
+  llpin: "ACV-6693",
+  registeredOffice: {
+    street: "48, Church St, Shanthala Nagar, Ashok Nagar",
+    city: "Bengaluru",
+    region: "Karnataka",
+    postalCode: "560001",
+    country: "IN",
+    full: "48, Church St, Shanthala Nagar, Ashok Nagar, Bengaluru, Karnataka 560001, India",
+  },
+  grievanceOfficer: {
+    name: "Parikshit Roy Chowdhury",
+    designation: "Founder and Designated Partner",
+    email: "roy.pc@theorganizationlearninglabs.com",
+  },
   url: process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://theorganizationlearninglabs.com",
   /** Only this host may be indexed; any other host (Railway, previews, localhost) is kept out of search. */
   productionHost: "theorganizationlearninglabs.com",
   locale: "en_IN",
   phone: "+91 76766 46518",
   email: {
-    privacy: "privacy@ollacademy.com",
-    legal: "legal@ollacademy.com",
+    privacy: "roy.pc@theorganizationlearninglabs.com",
+    legal: "roy.pc@theorganizationlearninglabs.com",
     contact: process.env.NEXT_PUBLIC_CONTACT_EMAIL || "support@ollacademy.com",
   },
   social: {
