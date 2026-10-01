@@ -17,6 +17,7 @@ const ICONS = {
   phone: "M6.6 3.5h3l1.5 4-2 1.3a11 11 0 0 0 6.1 6.1l1.3-2 4 1.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z",
   mail: "M3.5 6.5h17v11h-17zM3.5 7l8.5 6.5L20.5 7",
   spark: "M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18",
+  pin: "M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z",
 } as const;
 
 const STEPS = [
@@ -35,9 +36,18 @@ function Icon({ d }: { d: string }) {
 
 export default function ContactPage() {
   const tel = siteConfig.phone.replace(/\s/g, "");
+  const office = siteConfig.registeredOffice;
   const cards = [
     { icon: ICONS.phone, k: "Call us", v: siteConfig.phone, href: `tel:${tel}`, s: "Monday to Friday, 9:30 am to 6:30 pm IST" },
     { icon: ICONS.mail, k: "Email us", v: siteConfig.email.contact, href: `mailto:${siteConfig.email.contact}`, s: "We reply within one business day" },
+    {
+      icon: ICONS.pin,
+      k: "Visit us",
+      v: office.street,
+      href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(office.full)}`,
+      s: `${office.city}, ${office.region} ${office.postalCode}`,
+      external: true,
+    },
     { icon: ICONS.spark, k: "Start an assessment", v: "Create your account", href: siteConfig.platform.signup, s: "Set up an enterprise, unit or role assessment" },
   ];
 
@@ -67,7 +77,11 @@ export default function ContactPage() {
             <ul className="contact-cards" data-stagger>
               {cards.map((c) => (
                 <li key={c.k}>
-                  <a className="contact-card" href={c.href}>
+                  <a
+                    className="contact-card"
+                    href={c.href}
+                    {...("external" in c ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  >
                     <span className="contact-card-ic">
                       <Icon d={c.icon} />
                     </span>
