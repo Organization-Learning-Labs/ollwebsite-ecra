@@ -44,7 +44,7 @@ export default function ContactPage() {
       icon: ICONS.pin,
       k: "Visit us",
       v: office.street,
-      href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(office.full)}`,
+      href: office.mapUrl,
       s: `${office.city}, ${office.region} ${office.postalCode}`,
       external: true,
     },

@@ -26,6 +26,10 @@ const nextConfig: NextConfig = {
         source: "/dap-report",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }],
       },
+      {
+        source: "/cluster-explorer",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" }],
+      },
     ];
   },
   images: {
