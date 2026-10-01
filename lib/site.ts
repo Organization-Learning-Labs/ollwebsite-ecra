@@ -15,6 +15,8 @@ export const siteConfig = {
     postalCode: "560001",
     country: "IN",
     full: "48, Church St, Shanthala Nagar, Ashok Nagar, Bengaluru, Karnataka 560001, India",
+    mapUrl:
+      "https://www.google.com/maps/place/The+Organization+Learning+Labs/@12.9757429,77.6031762,17z/data=!3m1!4b1!4m6!3m5!1s0x3bae167c614d883b:0x695065d36b5dc88a!8m2!3d12.9757429!4d77.6031762!16s%2Fg%2F11y544gsgv",
   },
   grievanceOfficer: {
     name: "Parikshit Roy Chowdhury",
