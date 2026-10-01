@@ -46,7 +46,7 @@ export function EcraSubPage({ slug, pageKey, children }: EcraSubPageProps) {
         <div className="wrap">
           <EcraNextCard current={slug} />
           <div style={{ marginTop: 72 }}>
-            <EcraCta />
+            <EcraCta slug={slug} />
           </div>
         </div>
       </section>

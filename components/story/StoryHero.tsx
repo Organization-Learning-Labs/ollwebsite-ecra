@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { SplitWords } from "./SplitWords";
 
 type Crumb = { label: string; href?: string };
@@ -12,10 +12,11 @@ type StoryHeroProps = {
   crumbs?: Crumb[];
   /** One word of the h1 to sweep with the amber marker. */
   highlight?: string;
+  children?: ReactNode;
 };
 
 /** Text-first oversized hero used across the story pages. */
-export function StoryHero({ eyebrow, h1, lede, chips, crumbs, highlight }: StoryHeroProps) {
+export function StoryHero({ eyebrow, h1, lede, chips, crumbs, highlight, children }: StoryHeroProps) {
   return (
     <header className="s-hero">
       <div className="wrap">
@@ -44,6 +45,7 @@ export function StoryHero({ eyebrow, h1, lede, chips, crumbs, highlight }: Story
             ))}
           </ul>
         ) : null}
+        {children}
       </div>
     </header>
   );

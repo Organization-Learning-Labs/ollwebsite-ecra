@@ -1,0 +1,398 @@
+/* ==========================================================================
+   DAP REPORT: scoped base reset
+   The report is authored against Tailwind preflight, which this site keeps
+   off. Zero-specificity :where() rules restore those defaults inside the
+   report only, so Tailwind utilities still win.
+   ========================================================================== */
+.dap-report {
+  font-family: var(--font-satoshi), Satoshi, system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #111827;
+  text-align: left;
+}
+
+:where(.dap-report) *,
+:where(.dap-report) *::before,
+:where(.dap-report) *::after {
+  box-sizing: border-box;
+  border: 0 solid #e5e7eb;
+}
+
+:where(.dap-report) :is(h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+}
+
+:where(.dap-report) :is(p, dl, dd, ol, ul, figure, blockquote) {
+  margin: 0;
+}
+
+:where(.dap-report) section {
+  padding: 0;
+}
+
+:where(.dap-report) :is(ol, ul) {
+  list-style: none;
+  padding: 0;
+}
+
+:where(.dap-report) :is(img, svg) {
+  display: block;
+  vertical-align: middle;
+}
+
+:where(.dap-report) img {
+  max-width: 100%;
+  height: auto;
+}
+
+:where(.dap-report) table {
+  border-collapse: collapse;
+  text-indent: 0;
+  border-color: inherit;
+}
+
+:where(.dap-report) :is(th, td) {
+  padding: 0;
+}
+
+:where(.dap-report) a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+/* ==========================================================================
+   Sales showcase frame around the report
+   ========================================================================== */
+.dap-hero-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.dap-hero-acts .btn svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.35s var(--ease-spring);
+}
+
+.dap-hero-acts .btn:hover svg {
+  transform: translateX(3px);
+}
+
+.dap-hero-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  font-size: 13.5px;
+  color: var(--mute);
+}
+
+.dap-hero-note::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--amber-bright);
+  box-shadow: 0 0 0 3px rgba(253, 181, 0, 0.22);
+}
+
+.dap-inside {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.dap-inside a {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, 20px);
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.2s, box-shadow 0.3s, transform 0.45s var(--ease-spring);
+}
+
+.dap-inside a:hover {
+  border-color: var(--blue);
+  box-shadow: 0 22px 50px -32px rgba(11, 27, 51, 0.45);
+  transform: translateY(-4px);
+}
+
+.dap-inside-n {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-weight: 800;
+  font-size: 15px;
+  transition: background 0.2s, color 0.2s, transform 0.45s var(--ease-spring);
+}
+
+.dap-inside a:hover .dap-inside-n {
+  background: var(--blue);
+  color: #fff;
+  transform: rotate(-8deg) scale(1.06);
+}
+
+.dap-inside strong {
+  font-size: 17px;
+  line-height: 1.3;
+}
+
+.dap-inside p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--mute);
+}
+
+.dap-inside-go {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+}
+
+.dap-inside-go::after {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(135deg);
+  transition: transform 0.35s var(--ease-spring);
+}
+
+.dap-inside a:hover .dap-inside-go::after {
+  transform: translateY(3px) rotate(135deg);
+}
+
+.dap-viewer-sec {
+  padding-top: 8px;
+}
+
+.dap-viewer {
+  max-width: 1080px;
+  margin: 0 auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg, 20px);
+  background: #f3f4f6;
+  overflow: hidden;
+  box-shadow: 0 50px 100px -60px rgba(11, 27, 51, 0.55), 0 18px 40px -30px rgba(0, 79, 150, 0.3);
+}
+
+.dap-viewer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--mute);
+}
+
+.dap-viewer-dots {
+  display: inline-flex;
+  gap: 6px;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.dap-viewer-dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--line-strong);
+}
+
+.dap-viewer-dots i:nth-child(1) { background: #F87171; }
+.dap-viewer-dots i:nth-child(2) { background: var(--amber-bright); }
+.dap-viewer-dots i:nth-child(3) { background: #46B749; }
+
+.dap-viewer-title {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.dap-viewer-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.dap-viewer [id^="dap-"] {
+  scroll-margin-top: 110px;
+}
+
+@media (max-width: 960px) {
+  .dap-inside {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .dap-inside {
+    grid-template-columns: 1fr;
+  }
+  .dap-viewer {
+    border-radius: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dap-inside a,
+  .dap-inside-n,
+  .dap-inside-go::after,
+  .dap-hero-acts .btn svg {
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+  .dap-inside a:hover,
+  .dap-inside a:hover .dap-inside-n {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   DAP REPORT: PRINT LAYOUT (from the platform, scoped to the report)
+   ========================================================================== */
+@media (min-width: 1024px) {
+  .dap-value-sec .s-head {
+    max-width: none;
+  }
+
+  .dap-value-sec .s-head h2 {
+    white-space: nowrap;
+  }
+
+  .dap-cta-sec .s-cta p {
+    max-width: none;
+    white-space: nowrap;
+  }
+}
+
+@media print {
+  body:has(.dap-report) .nav,
+  body:has(.dap-report) footer,
+  body:has(.dap-report) .dap-noprint {
+    display: none !important;
+  }
+
+  body:has(.dap-report),
+  body:has(.dap-report) main {
+    background: #ffffff !important;
+  }
+
+  .dap-viewer-sec {
+    padding: 0 !important;
+  }
+
+  body:has(.dap-report) .wrap {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .dap-viewer {
+    max-width: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: #ffffff;
+  }
+
+  .dap-viewer-bar {
+    display: none !important;
+  }
+
+  .dap-report *,
+  .dap-report *::before,
+  .dap-report *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .dap-print-doc {
+    width: 273mm !important;
+    max-width: 273mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .dap-print-doc > * + * {
+    margin-top: 6mm !important;
+  }
+
+  .dap-prose-measure {
+    max-width: 185mm;
+  }
+
+  .dap-avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .dap-page {
+    break-before: page;
+    page-break-before: always;
+  }
+
+  .dap-page:first-of-type {
+    break-before: auto;
+    page-break-before: auto;
+  }
+
+  .dap-report :is(h1, h2, h3) {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .dap-report :is(table, ul, ol, dl) {
+    break-inside: auto;
+  }
+
+  .dap-report :is(tr, li) {
+    break-inside: avoid;
+  }
+
+  .dap-report a {
+    text-decoration: none !important;
+    color: inherit !important;
+  }
+}

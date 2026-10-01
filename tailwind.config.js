@@ -3,6 +3,9 @@ module.exports = {
   content: [
     './components/oll-bot/**/*.{js,ts,jsx,tsx}',
     './app/pilot/**/*.{js,ts,jsx,tsx}',
+    './components/dap/**/*.{js,ts,jsx,tsx}',
+    './app/dap-report/**/*.{js,ts,jsx,tsx}',
+    './lib/dap/**/*.{js,ts,jsx,tsx}',
   ],
   corePlugins: {
     preflight: false,
