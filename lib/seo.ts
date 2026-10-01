@@ -111,7 +111,14 @@ export function organizationJsonLd() {
       "The Organization Learning Labs researches structural change in industries and builds future capability models, competence blueprints and the Enterprise Capability Readiness Assessment (ECRA) for IT services and retail banking enterprises.",
     email: siteConfig.email.contact,
     telephone: siteConfig.phone,
-    address: { "@type": "PostalAddress", addressRegion: "Karnataka", addressCountry: "IN" },
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: siteConfig.registeredOffice.street,
+      addressLocality: siteConfig.registeredOffice.city,
+      addressRegion: siteConfig.registeredOffice.region,
+      postalCode: siteConfig.registeredOffice.postalCode,
+      addressCountry: siteConfig.registeredOffice.country,
+    },
     areaServed: ["IN", "Worldwide"],
     knowsAbout: [
       "Enterprise capability readiness",
