@@ -1,108 +1,187 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type CSSProperties, useEffect, useId, useMemo, useRef, useState } from "react";
+import { type CSSProperties, useEffect, useId, useRef, useState } from "react";
 import { splitKpis } from "@/lib/clusters/kpis";
-import type { ExplorerData, JobRoleClusters } from "@/lib/clusters/types";
 
-const uniq = (values: string[]) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
+const BASE_URL = "https://api.ollacademy.com/api";
 
-export function ClusterExplorer({ data }: { data: ExplorerData }) {
+type Industry = {
+  id: string;
+  industry: string;
+  is_active: boolean;
+  is_published: boolean;
+};
+
+type SubIndustry = {
+  id: string;
+  industry_id: string;
+  sub_industry: string;
+  is_active: boolean;
+  is_published: boolean;
+};
+
+type JobRole = {
+  id: string;
+  industry: string;
+  industry_id: string;
+  sub_industry: string;
+  sub_industry_id: string;
+  job_role: string;
+  career_grade_label: string;
+  career_grade_code: string;
+  responsibility_id: string;
+  job_category: string[];
+};
+
+type ClusterDetail = {
+  id: number | string;
+  cluster: string;
+  description: string;
+};
+
+type CompetenceClusterResponse = {
+  job_role: string;
+  description: string;
+  responsibility: string;
+  career_grade_label: string;
+  clusters: ClusterDetail[];
+};
+
+export function ClusterExplorer() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
 
-  const industries = useMemo(() => uniq(data.roles.map((r) => r.industry)), [data.roles]);
+  const [industryId, setIndustryId] = useState<string>(params.get("industry") ?? "");
+  const [subIndustryId, setSubIndustryId] = useState<string>(params.get("sub") ?? "");
+  const [roleId, setRoleId] = useState<string>(params.get("role") ?? "");
 
-  const initialIndustry = industries.includes(params.get("industry") ?? "") ? params.get("industry")! : "";
-  const initialSub = data.roles.some((r) => r.industry === initialIndustry && r.subIndustry === params.get("sub"))
-    ? params.get("sub")!
-    : "";
-  const initialRole = data.roles.find(
-    (r) => r.id === params.get("role") && r.industry === initialIndustry && r.subIndustry === initialSub,
-  )
-    ? params.get("role")!
-    : "";
+  const [industries, setIndustries] = useState<Industry[]>([]);
+  const [subIndustries, setSubIndustries] = useState<SubIndustry[]>([]);
+  const [roles, setRoles] = useState<JobRole[]>([]);
 
-  const [industry, setIndustry] = useState(initialIndustry);
-  const [sub, setSub] = useState(initialSub);
-  const [roleId, setRoleId] = useState(initialRole);
-
-  const subIndustries = useMemo(
-    () => uniq(data.roles.filter((r) => r.industry === industry).map((r) => r.subIndustry)),
-    [data.roles, industry],
-  );
-  const roles = useMemo(
-    () =>
-      data.roles
-        .filter((r) => r.industry === industry && r.subIndustry === sub)
-        .sort((a, b) => a.jobRole.localeCompare(b.jobRole)),
-    [data.roles, industry, sub],
-  );
-  const role = data.roles.find((r) => r.id === roleId) ?? null;
+  const [roleDetails, setRoleDetails] = useState<CompetenceClusterResponse | null>(null);
+  const [isLoadingRole, setIsLoadingRole] = useState(false);
 
   useEffect(() => {
     const next = new URLSearchParams();
-    if (industry) next.set("industry", industry);
-    if (sub) next.set("sub", sub);
+    if (industryId) next.set("industry", industryId);
+    if (subIndustryId) next.set("sub", subIndustryId);
     if (roleId) next.set("role", roleId);
     const qs = next.toString();
     if (qs !== params.toString()) router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [industry, sub, roleId, pathname, params, router]);
+  }, [industryId, subIndustryId, roleId, pathname, params, router]);
 
-  const pickIndustry = (v: string) => {
-    setIndustry(v);
-    setSub("");
+  useEffect(() => {
+    fetch(`${BASE_URL}/dropdowns/industries`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.data) setIndustries(res.data);
+      })
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!industryId) {
+      setSubIndustries([]);
+      return;
+    }
+    fetch(`${BASE_URL}/dropdowns/sub-industries?industry_id=${industryId}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.data) setSubIndustries(res.data);
+      })
+      .catch(console.error);
+  }, [industryId]);
+
+  useEffect(() => {
+    if (!subIndustryId) {
+      setRoles([]);
+      return;
+    }
+    fetch(`${BASE_URL}/dropdowns/job-roles?sub_industry_id=${subIndustryId}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.data) setRoles(res.data);
+      })
+      .catch(console.error);
+  }, [subIndustryId]);
+
+  useEffect(() => {
+    if (!roleId) {
+      setRoleDetails(null);
+      return;
+    }
+    setIsLoadingRole(true);
+    fetch(`${BASE_URL}/job_role/${roleId}/competence-clusters`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.data) setRoleDetails(res.data);
+      })
+      .catch(console.error)
+      .finally(() => setIsLoadingRole(false));
+  }, [roleId]);
+
+  const pickIndustry = (id: string) => {
+    setIndustryId(id);
+    setSubIndustryId("");
     setRoleId("");
   };
-  const pickSub = (v: string) => {
-    setSub(v);
+
+  const pickSub = (id: string) => {
+    setSubIndustryId(id);
     setRoleId("");
   };
+
   const reset = () => pickIndustry("");
+
+  const selIndustry = industries.find((i) => i.id === industryId);
+  const selSub = subIndustries.find((s) => s.id === subIndustryId);
+  const selRole = roles.find((r) => r.id === roleId);
 
   return (
     <div className="cx">
       <div className="cx-panel" data-reveal="up">
         <ol className="cx-steps">
-          <li className={industry ? "is-done" : "is-active"}>
+          <li className={industryId ? "is-done" : "is-active"}>
             <span className="cx-step-n">1</span>
             <label className="cx-field">
               <span className="cx-field-k">Industry</span>
-              <select value={industry} onChange={(e) => pickIndustry(e.target.value)}>
+              <select value={industryId} onChange={(e) => pickIndustry(e.target.value)}>
                 <option value="">Select an industry</option>
                 {industries.map((i) => (
-                  <option key={i} value={i}>
-                    {i}
+                  <option key={i.id} value={i.id}>
+                    {i.industry}
                   </option>
                 ))}
               </select>
             </label>
           </li>
-          <li className={sub ? "is-done" : industry ? "is-active" : "is-locked"}>
+          <li className={subIndustryId ? "is-done" : industryId ? "is-active" : "is-locked"}>
             <span className="cx-step-n">2</span>
             <label className="cx-field">
               <span className="cx-field-k">Sub-industry</span>
-              <select value={sub} onChange={(e) => pickSub(e.target.value)} disabled={!industry}>
-                <option value="">{industry ? "Select a sub-industry" : "Choose an industry first"}</option>
+              <select value={subIndustryId} onChange={(e) => pickSub(e.target.value)} disabled={!industryId}>
+                <option value="">{industryId ? "Select a sub-industry" : "Choose an industry first"}</option>
                 {subIndustries.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
+                  <option key={s.id} value={s.id}>
+                    {s.sub_industry}
                   </option>
                 ))}
               </select>
             </label>
           </li>
-          <li className={roleId ? "is-done" : sub ? "is-active" : "is-locked"}>
+          <li className={roleId ? "is-done" : subIndustryId ? "is-active" : "is-locked"}>
             <span className="cx-step-n">3</span>
-            <RolePicker roles={roles} value={roleId} onPick={setRoleId} disabled={!sub} />
+            <RolePicker roles={roles} value={roleId} onPick={setRoleId} disabled={!subIndustryId} />
           </li>
         </ol>
-        {industry ? (
+        {industryId ? (
           <div className="cx-chips">
-            <span className="cx-chip">{industry}</span>
-            {sub ? <span className="cx-chip">{sub}</span> : null}
-            {role ? <span className="cx-chip">{role.jobRole}</span> : null}
+            <span className="cx-chip">{selIndustry?.industry || ""}</span>
+            {subIndustryId && selSub ? <span className="cx-chip">{selSub.sub_industry}</span> : null}
+            {roleId && selRole ? <span className="cx-chip">{selRole.job_role}</span> : null}
             <button type="button" className="cx-reset" onClick={reset}>
               Reset
             </button>
@@ -110,7 +189,13 @@ export function ClusterExplorer({ data }: { data: ExplorerData }) {
         ) : null}
       </div>
 
-      {role ? <RoleReveal key={role.id} role={role} /> : <EmptyState />}
+      {isLoadingRole ? (
+        <LoadingState />
+      ) : roleDetails && selIndustry && selSub ? (
+        <RoleReveal key={roleId} role={roleDetails} industryName={selIndustry.industry} subIndustryName={selSub.sub_industry} />
+      ) : (
+        <EmptyState />
+      )}
     </div>
   );
 }
@@ -121,19 +206,19 @@ function RolePicker({
   onPick,
   disabled,
 }: {
-  roles: JobRoleClusters[];
+  roles: JobRole[];
   value: string;
   onPick: (id: string) => void;
   disabled: boolean;
 }) {
   const id = useId();
   const selected = roles.find((r) => r.id === value);
-  const [query, setQuery] = useState(selected?.jobRole ?? "");
+  const [query, setQuery] = useState(selected?.job_role ?? "");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const wrap = useRef<HTMLDivElement>(null);
 
-  useEffect(() => setQuery(selected?.jobRole ?? ""), [selected?.jobRole]);
+  useEffect(() => setQuery(selected?.job_role ?? ""), [selected?.job_role]);
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -144,11 +229,11 @@ function RolePicker({
   }, []);
 
   const q = query.trim().toLowerCase();
-  const matches = selected && query === selected.jobRole ? roles : roles.filter((r) => r.jobRole.toLowerCase().includes(q));
+  const matches = selected && query === selected.job_role ? roles : roles.filter((r) => r.job_role.toLowerCase().includes(q));
 
-  const choose = (r: JobRoleClusters) => {
+  const choose = (r: JobRole) => {
     onPick(r.id);
-    setQuery(r.jobRole);
+    setQuery(r.job_role);
     setOpen(false);
   };
 
@@ -205,8 +290,8 @@ function RolePicker({
                   choose(r);
                 }}
               >
-                <strong>{r.jobRole}</strong>
-                <small>{r.careerGrade}</small>
+                <strong>{r.job_role}</strong>
+                <small>{r.career_grade_label}</small>
               </li>
             ))
           ) : (
@@ -218,25 +303,26 @@ function RolePicker({
   );
 }
 
-function RoleReveal({ role }: { role: JobRoleClusters }) {
+function RoleReveal({ role, industryName, subIndustryName }: { role: CompetenceClusterResponse; industryName: string; subIndustryName: string }) {
   const { summary, kpis } = splitKpis(role.description);
   const [filter, setFilter] = useState("");
   const f = filter.trim().toLowerCase();
+  
   const clusters = f
-    ? role.clusters.filter((c) => `${c.name} ${c.description} ${c.id}`.toLowerCase().includes(f))
+    ? role.clusters.filter((c) => `${c.cluster} ${c.description} ${c.id}`.toLowerCase().includes(f))
     : role.clusters;
 
   return (
     <div className="cx-result">
       <article className="cx-role">
         <span className="cx-badge">Job role</span>
-        <h2>{role.jobRole}</h2>
+        <h2>{role.job_role}</h2>
         <ul className="cx-pills">
           <li>
-            {role.industry} · {role.subIndustry}
+            {industryName} · {subIndustryName}
           </li>
           <li>{role.responsibility}</li>
-          <li>{role.careerGrade}</li>
+          <li>{role.career_grade_label}</li>
         </ul>
         <p className="cx-role-desc">{summary}</p>
         {kpis.length ? (
@@ -269,7 +355,7 @@ function RoleReveal({ role }: { role: JobRoleClusters }) {
           {clusters.map((c, i) => (
             <li key={c.id} className="cx-card" style={{ "--i": i } as CSSProperties}>
               <span className="cx-card-id">#{c.id}</span>
-              <strong>{c.name}</strong>
+              <strong>{c.cluster}</strong>
               <p>{c.description}</p>
             </li>
           ))}
@@ -294,6 +380,14 @@ function EmptyState() {
         ))}
       </ul>
       <p className="cx-empty-msg">Choose an industry, sub-industry and job role to reveal its linked clusters.</p>
+    </div>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="cx-empty">
+      <p className="cx-empty-msg" style={{ padding: "3rem", textAlign: "center", color: "var(--color-fg-muted)" }}>Loading clusters...</p>
     </div>
   );
 }
