@@ -7,7 +7,6 @@ import { StoryCta } from "@/components/story/StoryCta";
 import { StoryHero } from "@/components/story/StoryHero";
 import { StoryMotion } from "@/components/story/StoryMotion";
 import { ACCESS_PATH, hasAccess } from "@/lib/clusters/access";
-import { getExplorerData } from "@/lib/clusters/source";
 import { siteConfig } from "@/lib/site";
 
 const NOINDEX = { index: false, follow: false, nocache: true } as const;
@@ -36,8 +35,6 @@ export default async function ClusterExplorerPage({ searchParams }: PageProps) {
     );
   }
 
-  const data = await getExplorerData();
-
   return (
     <main id="main">
       <StoryMotion />
@@ -51,7 +48,7 @@ export default async function ClusterExplorerPage({ searchParams }: PageProps) {
       <section className="cx-sec">
         <div className="wrap">
           <Suspense fallback={null}>
-            <ClusterExplorer data={data} />
+            <ClusterExplorer />
           </Suspense>
         </div>
       </section>
