@@ -177,7 +177,6 @@ export function NominationForm({
           .map((row) => ({
             id: String(row.id),
             label: String(row.job_role),
-            hint: [row.sub_industry, row.career_grade_label].filter(Boolean).join(' · '),
             subIndustry: row.sub_industry?.trim() || '',
           }));
         if (fromInviteLink && knownSubIndustry) {
