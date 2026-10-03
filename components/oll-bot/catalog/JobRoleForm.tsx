@@ -90,7 +90,6 @@ export function JobRoleForm({
           .map((row) => ({
             id: String(row.id),
             label: String(row.job_role),
-            // hint: row.sub_industry?.trim() || undefined,
           }));
         if (!cancelled) setRoles(options);
       })
