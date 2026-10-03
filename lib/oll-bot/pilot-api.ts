@@ -29,6 +29,7 @@ export const PILOT_STORAGE = {
   nominatorName: 'oll_pilot_nominator_name',
   nominatorEmail: 'oll_pilot_nominator_email',
   industry: 'oll_pilot_industry',
+  subIndustry: 'oll_pilot_sub_industry',
 } as const;
 
 export type PilotSessionContext = {
@@ -39,6 +40,7 @@ export type PilotSessionContext = {
   nominator_role?: string;
   organization_name?: string;
   industry?: string;
+  sub_industry?: string;
 };
 
 /** Public outreach track payload (from GET /pilot/outreach/track). */
@@ -118,6 +120,9 @@ export function persistOutreachTrackContext(track: OutreachTrackPayload) {
   if (track.industry) {
     writePilotSessionValue(PILOT_STORAGE.industry, track.industry);
   }
+  if (track.sub_industry) {
+    writePilotSessionValue(PILOT_STORAGE.subIndustry, track.sub_industry);
+  }
 }
 
 export function readPilotSessionContext(): PilotSessionContext {
@@ -132,6 +137,7 @@ export function readPilotSessionContext(): PilotSessionContext {
       organization_name:
         sessionStorage.getItem(PILOT_STORAGE.organizationName) || undefined,
       industry: sessionStorage.getItem(PILOT_STORAGE.industry) || undefined,
+      sub_industry: sessionStorage.getItem(PILOT_STORAGE.subIndustry) || undefined,
     };
   } catch {
     return {};
