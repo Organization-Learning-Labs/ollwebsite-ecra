@@ -405,6 +405,15 @@ function buildInitialMessages(): ChatMessage[] {
   ];
 }
 
+function assistantMessagesFromText(text: string): ChatMessage[] {
+  return text
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => ({ id: newId(), role: 'assistant' as const, text: line }));
+}
+
 function buildPilotLandingMessages(
   track: OutreachTrackPayload,
   fromInvite = false
@@ -430,7 +439,7 @@ function buildPilotLandingMessages(
 
   const messages: ChatMessage[] = [];
   if (greeting) {
-    messages.push({ id: newId(), role: 'assistant', text: greeting });
+    messages.push(...assistantMessagesFromText(greeting));
   }
 
   messages.push({
