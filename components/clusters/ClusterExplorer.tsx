@@ -291,7 +291,7 @@ function RolePicker({
                 }}
               >
                 <strong>{r.job_role}</strong>
-                <small>{r.career_grade_label}</small>
+                {/* <small>{r.career_grade_label}</small> */}
               </li>
             ))
           ) : (
@@ -322,7 +322,7 @@ function RoleReveal({ role, industryName, subIndustryName }: { role: CompetenceC
             {industryName} · {subIndustryName}
           </li>
           <li>{role.responsibility}</li>
-          <li>{role.career_grade_label}</li>
+          {/* <li>{role.career_grade_label}</li> */}
         </ul>
         <p className="cx-role-desc">{summary}</p>
         {kpis.length ? (
