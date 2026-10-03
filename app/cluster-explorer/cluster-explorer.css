@@ -401,7 +401,7 @@
 /* Empty state */
 .cx-empty {
   position: relative;
-  margin-top: 40px;
+  margin-top: 100px;
 }
 
 .cx-grid--ghost {
