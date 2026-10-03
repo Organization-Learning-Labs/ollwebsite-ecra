@@ -61,6 +61,7 @@ export function NominationForm({
   nominee_dept,
   nominee_industry,
   lockIdentity,
+  hideIndustry,
   pilotContext,
   onSuccess,
 }: NominationFormProps & {
@@ -92,9 +93,15 @@ export function NominationForm({
   const knownCompany = isSelfAssess
     ? nominee_dept?.trim() || session.organization_name?.trim() || ''
     : nominee_dept?.trim() || '';
-  const knownIndustry = isSelfAssess
-    ? nominee_industry?.trim() || session.industry?.trim() || ''
-    : nominee_industry?.trim() || '';
+  const knownIndustry =
+    nominee_industry?.trim() ||
+    session.industry?.trim() ||
+    '';
+  const knownSubIndustry = session.sub_industry?.trim() || '';
+  const fromInviteLink = Boolean(
+    hideIndustry ||
+      (session.campaign_id && session.executive_id && knownIndustry)
+  );
   const fromInvite = Boolean(
     lockIdentity && isSelfAssess && knownName && isValidEmail(knownEmail)
   );
@@ -120,7 +127,7 @@ export function NominationForm({
     effectiveName.length > 1 && isValidEmail(effectiveEmail);
 
   useEffect(() => {
-    if (!identityReady) return;
+    if (!identityReady && !fromInviteLink) return;
     let cancelled = false;
     setIndustriesLoading(true);
     fetch('/api/dropdowns/industries')
@@ -146,7 +153,7 @@ export function NominationForm({
     return () => {
       cancelled = true;
     };
-  }, [identityReady]);
+  }, [fromInviteLink, identityReady]);
 
   useEffect(() => {
     if (!industry) {
@@ -165,13 +172,24 @@ export function NominationForm({
           error?: string;
         };
         if (!res.ok) throw new Error(payload.error || 'Could not load job roles');
-        const options = (payload.data || [])
+        let options = (payload.data || [])
           .filter((row) => row.is_active !== false && row.id && row.job_role)
           .map((row) => ({
             id: String(row.id),
             label: String(row.job_role),
             hint: [row.sub_industry, row.career_grade_label].filter(Boolean).join(' · '),
+            subIndustry: row.sub_industry?.trim() || '',
           }));
+        if (fromInviteLink && knownSubIndustry) {
+          const sub = knownSubIndustry.toLowerCase();
+          const filtered = options.filter(
+            (option) =>
+              option.subIndustry.toLowerCase() === sub ||
+              option.subIndustry.toLowerCase().includes(sub) ||
+              sub.includes(option.subIndustry.toLowerCase())
+          );
+          if (filtered.length > 0) options = filtered;
+        }
         if (!cancelled) setRoles(options);
       })
       .catch((err) => {
@@ -185,7 +203,7 @@ export function NominationForm({
     return () => {
       cancelled = true;
     };
-  }, [industry]);
+  }, [fromInviteLink, industry, knownSubIndustry]);
 
   useEffect(() => {
     if (!isSelfAssess) return;
@@ -200,16 +218,20 @@ export function NominationForm({
   }, [fromInvite, knownName, knownEmail]);
 
   useEffect(() => {
-    if (!isSelfAssess || industry || industries.length === 0 || !knownIndustry) return;
+    if (industry || industries.length === 0 || !knownIndustry) return;
+    if (!isSelfAssess && !fromInviteLink) return;
     const match = findClosestOption(industries, knownIndustry);
     if (match) setIndustry(match);
-  }, [isSelfAssess, industries, knownIndustry, industry]);
+  }, [fromInviteLink, industries, isSelfAssess, knownIndustry, industry]);
 
   useEffect(() => {
     if (!isSelfAssess || jobRole || roles.length === 0 || !knownJob) return;
     const match = findClosestOption(roles, knownJob);
     if (match) setJobRole(match);
   }, [isSelfAssess, roles, knownJob, jobRole]);
+
+  const showIndustryField = !fromInviteLink;
+  const inviteContextLabel = [knownIndustry, knownSubIndustry].filter(Boolean).join(' · ');
 
   const handleSubmit = async () => {
     if (!identityReady) {
@@ -322,7 +344,13 @@ export function NominationForm({
           />
         </>
       )}
-      {identityReady ? (
+      {fromInviteLink && inviteContextLabel ? (
+        <div className="oll-known-person">
+          <p className="oll-known-person-kicker">Organization context</p>
+          <p className="oll-known-person-meta">{inviteContextLabel}</p>
+        </div>
+      ) : null}
+      {identityReady && showIndustryField ? (
         <>
           {isSelfAssess && (knownIndustry || knownJob) ? (
             <p className="text-[11px] text-gray-500">

@@ -53,6 +53,8 @@ export type NominationFormProps = {
   nominee_dept?: string;
   nominee_industry?: string;
   lockIdentity?: boolean;
+  /** When true, industry is taken from invitation context and not shown in the form. */
+  hideIndustry?: boolean;
 };
 
 export type ThankYouCardProps = {

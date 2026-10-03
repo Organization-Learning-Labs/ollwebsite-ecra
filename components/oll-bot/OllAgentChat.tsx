@@ -405,41 +405,84 @@ function buildInitialMessages(): ChatMessage[] {
   ];
 }
 
-function buildPilotLandingMessages(track: OutreachTrackPayload): ChatMessage[] {
+function assistantMessagesFromText(text: string): ChatMessage[] {
+  return text
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => ({ id: newId(), role: 'assistant' as const, text: line }));
+}
+
+function buildPilotLandingMessages(
+  track: OutreachTrackPayload,
+  fromInvite = false
+): ChatMessage[] {
   const name = track.executive_name?.trim();
   const company = track.company?.trim();
   const campaignTitle = track.campaign_title?.trim();
   const customWelcome = track.landing_welcome_message?.trim();
+  const inviteIndustry = track.industry?.trim();
 
-  let greeting = customWelcome || "You've been invited to OLL's diagnostic pilot.";
-  if (!customWelcome) {
-    if (name && campaignTitle && company) {
-      greeting = `Hi ${name}, ${campaignTitle} is ready for ${company}.`;
-    } else if (name && company) {
-      greeting = `Hi ${name}, welcome to the OLL diagnostic pilot for ${company}.`;
-    } else if (name) {
-      greeting = `Hi ${name}, welcome to the OLL diagnostic pilot.`;
-    }
+  let greeting: string | null = null;
+  if (customWelcome) {
+    greeting = customWelcome;
+  } else if (name && campaignTitle && company) {
+    greeting = `Hi ${name}, ${campaignTitle} is ready for ${company}.`;
+  } else if (name && company) {
+    greeting = `Hi ${name}, welcome to the OLL diagnostic pilot for ${company}.`;
+  } else if (name) {
+    greeting = `Hi ${name}, welcome to the OLL diagnostic pilot.`;
+  } else if (!fromInvite) {
+    greeting = "You've been invited to OLL's diagnostic pilot.";
   }
 
-  return [
-    { id: newId(), role: 'assistant', text: greeting },
-    {
-      id: newId(),
-      role: 'assistant',
-      text: 'Nominate an employee below for a diagnostic scan. We will provision access and send them an invitation.',
-      catalog: [
-        {
-          type: 'nomination_form',
-          props: {
-            title: 'Nominate an employee',
-            subtitle:
-              'Share the employee details below. We will match them to a diagnostic assessment and send an invitation.',
-          },
+  const messages: ChatMessage[] = [];
+  if (greeting) {
+    messages.push(...assistantMessagesFromText(greeting));
+  }
+
+  messages.push({
+    id: newId(),
+    role: 'assistant',
+    text: 'Nominate an employee below for a diagnostic scan. We will provision access and send them an invitation.',
+    catalog: [
+      {
+        type: 'nomination_form',
+        props: {
+          title: 'Nominate an employee',
+          subtitle:
+            fromInvite && inviteIndustry
+              ? 'Share the employee details below. We will match them using your organization context and send an invitation.'
+              : 'Share the employee details below. We will match them to a diagnostic assessment and send an invitation.',
+          nominee_industry: inviteIndustry || undefined,
+          organization_name: company || undefined,
+          nominator_name: name || undefined,
+          nominator_email: track.executive_email?.trim() || undefined,
+          nominator_role: track.executive_job_title?.trim() || undefined,
+          hideIndustry: Boolean(fromInvite && inviteIndustry),
         },
-      ],
-    },
-  ];
+      },
+    ],
+  });
+
+  return messages;
+}
+
+function hasInviteContext(ctx: PilotSessionContext): boolean {
+  return Boolean(ctx.campaign_id && ctx.executive_id && ctx.industry?.trim());
+}
+
+function inviteAwareNominationProps(ctx: PilotSessionContext) {
+  const fromInvite = hasInviteContext(ctx);
+  return {
+    nominee_industry: ctx.industry,
+    organization_name: ctx.organization_name,
+    nominator_name: ctx.nominator_name,
+    nominator_email: ctx.nominator_email,
+    nominator_role: ctx.nominator_role,
+    hideIndustry: fromInvite,
+  };
 }
 
 export type OllAgentChatProps = {
@@ -566,11 +609,14 @@ export function OllAgentChat({
         const stored = readPilotSessionContext();
         setPilotContext({
           ...stored,
+          campaign_id: campaign || stored.campaign_id,
+          executive_id: exec || stored.executive_id,
           nominator_name: track.executive_name || stored.nominator_name,
           nominator_email: track.executive_email || stored.nominator_email,
           nominator_role: track.executive_job_title || stored.nominator_role,
           organization_name: track.company || stored.organization_name,
           industry: track.industry || stored.industry,
+          sub_industry: track.sub_industry || stored.sub_industry,
         });
 
         void fetch('/api/agents/conversations', {
@@ -606,8 +652,8 @@ export function OllAgentChat({
           setExpanded(true);
           setMessages(
             campaign && exec
-              ? buildPilotLandingMessages(track)
-              : buildPilotLandingMessages({})
+              ? buildPilotLandingMessages(track, true)
+              : buildPilotLandingMessages({}, false)
           );
         } else {
           // Home bot skips intake - show welcome + starter chips immediately.
@@ -1039,10 +1085,13 @@ export function OllAgentChat({
       const knownName = ctx.nominator_name?.trim() || '';
       const knownEmail = ctx.nominator_email?.trim() || '';
       const fromEmail = Boolean(ctx.campaign_id && ctx.executive_id && (knownName || knownEmail));
+      const fromInvite = hasInviteContext(ctx);
 
       appendBotForm('Diagnose yourself', {
         text: fromEmail
-          ? 'These are the details from your invitation. Confirm them and adjust your industry or job role if needed.'
+          ? fromInvite
+            ? 'These are the details from your invitation. Confirm them and choose your job role if needed.'
+            : 'These are the details from your invitation. Confirm them and adjust your industry or job role if needed.'
           : 'Confirm your details below to start your diagnostic scan.',
         catalog: [
           {
@@ -1050,7 +1099,9 @@ export function OllAgentChat({
             props: {
               title: 'Self assess',
               subtitle: fromEmail
-                ? 'We suggested your details from your invitation email. You can change your industry and job role before starting.'
+                ? fromInvite
+                  ? 'We suggested your details from your invitation email. Choose your job role to start.'
+                  : 'We suggested your details from your invitation email. You can change your industry and job role before starting.'
                 : 'We will match you to a diagnostic assessment and send you an invitation.',
               submitLabel: 'Start my diagnostic scan',
               nominee_name: knownName || undefined,
@@ -1059,6 +1110,7 @@ export function OllAgentChat({
               nominee_dept: ctx.organization_name,
               nominee_industry: prefill.industry || ctx.industry,
               lockIdentity: fromEmail && Boolean(knownName && knownEmail),
+              hideIndustry: fromInvite,
             },
           },
         ],
@@ -1156,6 +1208,8 @@ export function OllAgentChat({
 
     // Surface nomination form immediately for the dedicated starter chip
     if (normalized === NOMINATE_STARTER.toLowerCase()) {
+      const ctx = { ...readPilotSessionContext(), ...pilotContext };
+      const fromInvite = hasInviteContext(ctx);
       appendBotForm(message.trim(), {
         text: 'Share the employee details below to nominate them for a diagnostic scan.',
         catalog: [
@@ -1163,8 +1217,10 @@ export function OllAgentChat({
             type: 'nomination_form',
             props: {
               title: 'Nominate an employee',
-              subtitle:
-                'Nominate someone for a diagnostic scan. We will provision access and send them an invitation.',
+              subtitle: fromInvite
+                ? 'Share the employee details below. We will match them using your organization context and send an invitation.'
+                : 'Nominate someone for a diagnostic scan. We will provision access and send them an invitation.',
+              ...inviteAwareNominationProps(ctx),
             },
           },
         ],
@@ -1177,9 +1233,12 @@ export function OllAgentChat({
       const knownName = ctx.nominator_name?.trim() || '';
       const knownEmail = ctx.nominator_email?.trim() || '';
       const fromEmail = Boolean(ctx.campaign_id && ctx.executive_id && (knownName || knownEmail));
+      const fromInvite = hasInviteContext(ctx);
       appendBotForm(message.trim(), {
         text: fromEmail
-          ? 'These are the details from your invitation. Confirm them and adjust your industry or job role if needed.'
+          ? fromInvite
+            ? 'These are the details from your invitation. Confirm them and choose your job role if needed.'
+            : 'These are the details from your invitation. Confirm them and adjust your industry or job role if needed.'
           : 'Confirm your details below to start your diagnostic scan.',
         catalog: [
           {
@@ -1187,7 +1246,9 @@ export function OllAgentChat({
             props: {
               title: 'Self assess',
               subtitle: fromEmail
-                ? 'We suggested your details from your invitation email. You can change your industry and job role before starting.'
+                ? fromInvite
+                  ? 'We suggested your details from your invitation email. Choose your job role to start.'
+                  : 'We suggested your details from your invitation email. You can change your industry and job role before starting.'
                 : 'We will match you to a diagnostic assessment and send you an invitation.',
               submitLabel: 'Start my diagnostic scan',
               nominee_name: knownName || undefined,
@@ -1196,6 +1257,7 @@ export function OllAgentChat({
               nominee_dept: ctx.organization_name,
               nominee_industry: ctx.industry,
               lockIdentity: fromEmail && Boolean(knownName && knownEmail),
+              hideIndustry: fromInvite,
             },
           },
         ],
