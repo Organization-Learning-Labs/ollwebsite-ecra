@@ -184,11 +184,11 @@ function normalizeReply(payload: Record<string, unknown>): AgentChatReply {
   return {
     reply: String(
       payload.reply ||
-        (result && result.message) ||
-        payload.error ||
-        (refused ? 'Refused (no reason returned)' : '') ||
-        payload.status ||
-        ''
+      (result && result.message) ||
+      payload.error ||
+      (refused ? 'Refused (no reason returned)' : '') ||
+      payload.status ||
+      ''
     ),
     run_id: payload.run_id != null ? String(payload.run_id) : undefined,
     status: payload.status != null ? String(payload.status) : undefined,
@@ -434,7 +434,7 @@ function buildPilotLandingMessages(
   } else if (name) {
     greeting = `Hi ${name}, welcome to the OLL diagnostic pilot.`;
   } else if (!fromInvite) {
-    greeting = "You've been invited to OLL's diagnostic pilot.";
+    greeting = "";
   }
 
   const messages: ChatMessage[] = [];
@@ -908,7 +908,7 @@ export function OllAgentChat({
 
         const answer = sanitizeAgentReply(
           reply.reply ||
-            (reply.refused ? 'Refused (no reason returned)' : '(empty reply)')
+          (reply.refused ? 'Refused (no reason returned)' : '(empty reply)')
         );
 
         const { text: parsedText, nodes } = parseOllUi(answer);
@@ -1006,7 +1006,7 @@ export function OllAgentChat({
 
         const answer = sanitizeAgentReply(
           reply.reply ||
-            (reply.refused ? 'Refused (no reason returned)' : '(empty reply)')
+          (reply.refused ? 'Refused (no reason returned)' : '(empty reply)')
         );
 
         const { text: parsedText, nodes } = parseOllUi(answer);
@@ -1016,7 +1016,7 @@ export function OllAgentChat({
         const resultText =
           offers.length > 0
             ? visibleText ||
-              `Here are assessments matched to ${payload.job_role} in ${payload.industry}.`
+            `Here are assessments matched to ${payload.job_role} in ${payload.industry}.`
             : "We couldn't auto-match a listing. Start a diagnostic scan or browse the marketplace.";
 
         const resultCatalog: CatalogNode[] = [
@@ -1387,11 +1387,11 @@ export function OllAgentChat({
               <div className="oll-chat-id">
                 <BrandMark className="oll-chat-mark" />
                 <div className="oll-chat-id-text">
-                  <p className="oll-chat-title">Diagnostic Pilot</p>
-                  <p className="oll-chat-sub">
+                  <p className="oll-chat-title pb-3">The Organization Learning Labs</p>
+                  {/* <p className="oll-chat-sub">
                     <span className="oll-online-dot" aria-hidden />
                     The Organization Learning Labs
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </header>
@@ -1461,15 +1461,13 @@ export function OllAgentChat({
                 <div key={msg.id} className={`${stagger} space-y-3`}>
                   {showBubble ? (
                     <div
-                      className={`flex items-end gap-2.5 ${
-                        isUser ? 'justify-end' : 'justify-start'
-                      }`}
+                      className={`flex items-end gap-2.5 ${isUser ? 'justify-end' : 'justify-start'
+                        }`}
                     >
                       {!isUser && <AssistantAvatar />}
                       <div
-                        className={`oll-bubble max-w-[85%] px-4 py-3 text-[14px] leading-relaxed break-words ${
-                          isUser ? 'oll-bubble--user whitespace-pre-wrap' : 'oll-bubble--bot'
-                        }`}
+                        className={`oll-bubble max-w-[85%] px-4 py-3 text-[14px] leading-relaxed break-words ${isUser ? 'oll-bubble--user whitespace-pre-wrap' : 'oll-bubble--bot'
+                          }`}
                       >
                         <BotMessageContent
                           text={isUser ? msg.text : withoutEmDashes(msg.text)}
@@ -1577,16 +1575,14 @@ export function OllAgentChat({
           <button
             type="button"
             onClick={togglePanel}
-            className={`oll-chat-launcher group ${
-              open || panelMounted ? '' : 'oll-launcher-idle'
-            }`}
+            className={`oll-chat-launcher group ${open || panelMounted ? '' : 'oll-launcher-idle'
+              }`}
             aria-label={open || panelMounted ? 'Close The Organization Learning Labs advisor' : 'Open The Organization Learning Labs advisor'}
             aria-expanded={open || panelMounted}
           >
             <span
-              className={`pointer-events-none absolute inset-0 rounded-full ring-2 ring-primary-300/60 ${
-                open || panelMounted ? '' : 'oll-launcher-ring'
-              }`}
+              className={`pointer-events-none absolute inset-0 rounded-full ring-2 ring-primary-300/60 ${open || panelMounted ? '' : 'oll-launcher-ring'
+                }`}
               aria-hidden
             />
             {open || panelMounted || hideLauncher ? (
