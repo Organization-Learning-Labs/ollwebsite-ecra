@@ -100,6 +100,7 @@ export function CatalogRenderer({
               <JobRoleForm
                 key={`c-${i}`}
                 {...node.props}
+                pilotContext={pilotContext}
                 onSubmit={onJobRoleSubmit}
               />
             );

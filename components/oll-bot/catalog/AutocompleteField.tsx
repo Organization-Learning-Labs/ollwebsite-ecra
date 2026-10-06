@@ -8,7 +8,7 @@ export type AutocompleteOption = {
   hint?: string;
 };
 
-const MAX_VISIBLE = 40;
+const DEFAULT_MAX_VISIBLE = 40;
 
 export function AutocompleteField({
   value,
@@ -16,7 +16,11 @@ export function AutocompleteField({
   placeholder,
   disabled,
   loading,
+  loadingMore,
   emptyText = 'No matches',
+  maxVisible = DEFAULT_MAX_VISIBLE,
+  hasMore,
+  onLoadMore,
   onSelect,
 }: {
   value: AutocompleteOption | null;
@@ -24,11 +28,17 @@ export function AutocompleteField({
   placeholder: string;
   disabled?: boolean;
   loading?: boolean;
+  loadingMore?: boolean;
   emptyText?: string;
+  /** Max options shown in the list. Use 0 for no cap (search still filters). */
+  maxVisible?: number;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
   onSelect: (option: AutocompleteOption | null) => void;
 }) {
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value?.label ?? '');
   const [highlight, setHighlight] = useState(0);
@@ -46,10 +56,19 @@ export function AutocompleteField({
             option.hint?.toLowerCase().includes(q)
         )
       : options;
-    return filtered.slice(0, MAX_VISIBLE);
-  }, [options, query]);
+    if (maxVisible <= 0) return filtered;
+    return filtered.slice(0, maxVisible);
+  }, [maxVisible, options, query]);
 
   const showList = open && !disabled && !loading;
+
+  const handleListScroll = () => {
+    const el = listRef.current;
+    if (!el || !onLoadMore || !hasMore || loadingMore) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 16) {
+      onLoadMore();
+    }
+  };
 
   const pick = (option: AutocompleteOption) => {
     onSelect(option);
@@ -115,7 +134,13 @@ export function AutocompleteField({
         }}
       />
       {showList ? (
-        <ul id={listId} role="listbox" className="oll-ac-list">
+        <ul
+          id={listId}
+          ref={listRef}
+          role="listbox"
+          className="oll-ac-list"
+          onScroll={handleListScroll}
+        >
           {matches.length === 0 ? (
             <li className="oll-ac-empty">{emptyText}</li>
           ) : (
@@ -136,6 +161,7 @@ export function AutocompleteField({
               </li>
             ))
           )}
+          {loadingMore ? <li className="oll-ac-empty">Loading more…</li> : null}
         </ul>
       ) : null}
     </div>

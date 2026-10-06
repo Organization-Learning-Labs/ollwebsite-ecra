@@ -6,6 +6,7 @@ import {
   readPilotSessionContext,
   type PilotSessionContext,
 } from '@/lib/oll-bot/pilot-api';
+import { usePaginatedJobRoles } from '@/lib/oll-bot/use-paginated-job-roles';
 import {
   AutocompleteField,
   type AutocompleteOption,
@@ -17,14 +18,10 @@ type IndustryRow = {
   is_active?: boolean;
 };
 
-type JobRoleRow = {
+type SubIndustryRow = {
   id?: string;
-  job_role?: string;
-  industry?: string;
-  industry_id?: string;
   sub_industry?: string;
-  career_grade_label?: string;
-  career_grade_code?: string;
+  industry_id?: string;
   is_active?: boolean;
 };
 
@@ -98,10 +95,11 @@ export function NominationForm({
     session.industry?.trim() ||
     '';
   const knownSubIndustry = session.sub_industry?.trim() || '';
+  const fromCampaign = Boolean(session.campaign_id && session.executive_id);
   const fromInviteLink = Boolean(
-    hideIndustry ||
-      (session.campaign_id && session.executive_id && knownIndustry)
+    hideIndustry || (fromCampaign && knownIndustry)
   );
+  const skipSubIndustry = fromCampaign && Boolean(knownSubIndustry);
   const fromInvite = Boolean(
     lockIdentity && isSelfAssess && knownName && isValidEmail(knownEmail)
   );
@@ -113,11 +111,12 @@ export function NominationForm({
     isSelfAssess ? knownEmail : nominee_email?.trim() || ''
   );
   const [industry, setIndustry] = useState<AutocompleteOption | null>(null);
+  const [subIndustry, setSubIndustry] = useState<AutocompleteOption | null>(null);
   const [jobRole, setJobRole] = useState<AutocompleteOption | null>(null);
   const [industries, setIndustries] = useState<AutocompleteOption[]>([]);
-  const [roles, setRoles] = useState<AutocompleteOption[]>([]);
+  const [subIndustries, setSubIndustries] = useState<AutocompleteOption[]>([]);
   const [industriesLoading, setIndustriesLoading] = useState(false);
-  const [rolesLoading, setRolesLoading] = useState(false);
+  const [subIndustriesLoading, setSubIndustriesLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -125,6 +124,25 @@ export function NominationForm({
   const effectiveEmail = nomineeEmail.trim() || (fromInvite ? knownEmail : '');
   const identityReady =
     effectiveName.length > 1 && isValidEmail(effectiveEmail);
+
+  const showIndustryField = !fromInviteLink;
+  const showSubIndustryField = identityReady && Boolean(industry) && !skipSubIndustry;
+  const showJobRoleField =
+    identityReady && (skipSubIndustry ? Boolean(industry) : Boolean(subIndustry));
+
+  const {
+    roles,
+    loading: rolesLoading,
+    loadingMore: rolesLoadingMore,
+    hasMore: rolesHasMore,
+    error: rolesError,
+    loadMore: loadMoreRoles,
+  } = usePaginatedJobRoles({
+    industryId: skipSubIndustry ? industry?.id : undefined,
+    subIndustryId: skipSubIndustry ? undefined : subIndustry?.id,
+    knownSubIndustry: skipSubIndustry ? knownSubIndustry : undefined,
+    enabled: showJobRoleField,
+  });
 
   useEffect(() => {
     if (!identityReady && !fromInviteLink) return;
@@ -156,53 +174,48 @@ export function NominationForm({
   }, [fromInviteLink, identityReady]);
 
   useEffect(() => {
-    if (!industry) {
-      setRoles([]);
-      setJobRole(null);
+    if (!industry || skipSubIndustry) {
+      setSubIndustries([]);
+      setSubIndustry(null);
       return;
     }
+
     let cancelled = false;
-    setRolesLoading(true);
-    setJobRole(null);
-    setRoles([]);
-    fetch(`/api/dropdowns/job-roles?industry_id=${encodeURIComponent(industry.id)}`)
+    setSubIndustriesLoading(true);
+    setSubIndustry(null);
+    setSubIndustries([]);
+    fetch(`/api/dropdowns/sub-industries?industry_id=${encodeURIComponent(industry.id)}`)
       .then(async (res) => {
         const payload = (await res.json().catch(() => ({}))) as {
-          data?: JobRoleRow[];
+          data?: SubIndustryRow[];
           error?: string;
         };
-        if (!res.ok) throw new Error(payload.error || 'Could not load job roles');
-        let options = (payload.data || [])
-          .filter((row) => row.is_active !== false && row.id && row.job_role)
-          .map((row) => ({
-            id: String(row.id),
-            label: String(row.job_role),
-            subIndustry: row.sub_industry?.trim() || '',
-          }));
-        if (fromInviteLink && knownSubIndustry) {
-          const sub = knownSubIndustry.toLowerCase();
-          const filtered = options.filter(
-            (option) =>
-              option.subIndustry.toLowerCase() === sub ||
-              option.subIndustry.toLowerCase().includes(sub) ||
-              sub.includes(option.subIndustry.toLowerCase())
-          );
-          if (filtered.length > 0) options = filtered;
+        if (!res.ok) throw new Error(payload.error || 'Could not load sub-industries');
+        const options = (payload.data || [])
+          .filter((row) => row.is_active !== false && row.id && row.sub_industry)
+          .map((row) => ({ id: String(row.id), label: String(row.sub_industry) }));
+        if (!cancelled) {
+          setSubIndustries(options);
+          if (options.length === 1) setSubIndustry(options[0]);
         }
-        if (!cancelled) setRoles(options);
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Could not load job roles');
+          setError(err instanceof Error ? err.message : 'Could not load sub-industries');
         }
       })
       .finally(() => {
-        if (!cancelled) setRolesLoading(false);
+        if (!cancelled) setSubIndustriesLoading(false);
       });
+
     return () => {
       cancelled = true;
     };
-  }, [fromInviteLink, industry, knownSubIndustry]);
+  }, [industry, skipSubIndustry]);
+
+  useEffect(() => {
+    setJobRole(null);
+  }, [industry?.id, subIndustry?.id, skipSubIndustry, knownSubIndustry]);
 
   useEffect(() => {
     if (!isSelfAssess) return;
@@ -229,7 +242,6 @@ export function NominationForm({
     if (match) setJobRole(match);
   }, [isSelfAssess, roles, knownJob, jobRole]);
 
-  const showIndustryField = !fromInviteLink;
   const inviteContextLabel = [knownIndustry, knownSubIndustry].filter(Boolean).join(' · ');
 
   const handleSubmit = async () => {
@@ -239,6 +251,10 @@ export function NominationForm({
     }
     if (!industry) {
       setError('Select an industry from the list to continue.');
+      return;
+    }
+    if (!skipSubIndustry && !subIndustry) {
+      setError('Select a sub-industry from the list to continue.');
       return;
     }
     if (!jobRole) {
@@ -366,11 +382,28 @@ export function NominationForm({
             }
             loading={industriesLoading}
             emptyText="No matching industry"
-            onSelect={setIndustry}
+            onSelect={(option) => {
+              setIndustry(option);
+              setSubIndustry(null);
+              setJobRole(null);
+            }}
           />
         </>
       ) : null}
-      {identityReady && industry ? (
+      {showSubIndustryField ? (
+        <AutocompleteField
+          value={subIndustry}
+          options={subIndustries}
+          placeholder="Sub-industry"
+          loading={subIndustriesLoading}
+          emptyText="No matching sub-industry"
+          onSelect={(option) => {
+            setSubIndustry(option);
+            setJobRole(null);
+          }}
+        />
+      ) : null}
+      {showJobRoleField ? (
         <AutocompleteField
           value={jobRole}
           options={roles}
@@ -380,11 +413,17 @@ export function NominationForm({
               : 'Job role'
           }
           loading={rolesLoading}
+          loadingMore={rolesLoadingMore}
+          hasMore={rolesHasMore}
+          onLoadMore={loadMoreRoles}
           emptyText="No matching job role"
+          maxVisible={0}
           onSelect={setJobRole}
         />
       ) : null}
-      {error ? <p className="text-[11px] text-coral-600">{error}</p> : null}
+      {(error || rolesError) ? (
+        <p className="text-[11px] text-coral-600">{error || rolesError}</p>
+      ) : null}
       <button
         type="button"
         disabled={busy}
