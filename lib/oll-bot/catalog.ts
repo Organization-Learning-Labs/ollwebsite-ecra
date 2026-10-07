@@ -84,6 +84,8 @@ export type RoleMatchActionsProps = {
 export type JobRoleSubmitPayload = {
   industry: string;
   industry_id: string;
+  sub_industry?: string;
+  sub_industry_id?: string;
   job_role: string;
   job_role_id: string;
 };

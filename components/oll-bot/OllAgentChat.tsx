@@ -485,6 +485,18 @@ function inviteAwareNominationProps(ctx: PilotSessionContext) {
   };
 }
 
+function selfAssessInviteText(ctx: PilotSessionContext, fromEmail: boolean): string {
+  if (!fromEmail) {
+    return 'Confirm your details below to start your diagnostic scan.';
+  }
+  if (hasInviteContext(ctx)) {
+    return ctx.sub_industry?.trim()
+      ? 'These are the details from your invitation. Confirm them and choose your job role if needed.'
+      : 'These are the details from your invitation. Choose your sub-industry and job role to continue.';
+  }
+  return 'These are the details from your invitation. Confirm them and adjust your industry or job role if needed.';
+}
+
 export type OllAgentChatProps = {
   /** Full-page pilot concierge (auto-open, skip intake, show nomination form). */
   variant?: 'default' | 'pilot';
@@ -1088,11 +1100,7 @@ export function OllAgentChat({
       const fromInvite = hasInviteContext(ctx);
 
       appendBotForm('Diagnose yourself', {
-        text: fromEmail
-          ? fromInvite
-            ? 'These are the details from your invitation. Confirm them and choose your job role if needed.'
-            : 'These are the details from your invitation. Confirm them and adjust your industry or job role if needed.'
-          : 'Confirm your details below to start your diagnostic scan.',
+        text: selfAssessInviteText(ctx, fromEmail),
         catalog: [
           {
             type: 'nomination_form',
@@ -1235,11 +1243,7 @@ export function OllAgentChat({
       const fromEmail = Boolean(ctx.campaign_id && ctx.executive_id && (knownName || knownEmail));
       const fromInvite = hasInviteContext(ctx);
       appendBotForm(message.trim(), {
-        text: fromEmail
-          ? fromInvite
-            ? 'These are the details from your invitation. Confirm them and choose your job role if needed.'
-            : 'These are the details from your invitation. Confirm them and adjust your industry or job role if needed.'
-          : 'Confirm your details below to start your diagnostic scan.',
+        text: selfAssessInviteText(ctx, fromEmail),
         catalog: [
           {
             type: 'nomination_form',
